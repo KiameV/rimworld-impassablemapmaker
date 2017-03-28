@@ -38,7 +38,10 @@ namespace ImpassableMapMaker
             var harmony = HarmonyInstance.Create("com.impassablemapmaker.rimworld.mod");
             harmony.PatchAll(Assembly.GetExecutingAssembly());
 
-            Log.Message("ImpassableMapMaker: Adding Harmony Postfix to GenStep_ElevationFertility.Generate(Map)");
+            Log.Message("ImpassableMapMaker: Adding Harmony Postfix to GenStep_ElevationFertility.Generate");
+            Log.Message("ImpassableMapMaker: Adding Harmony Postfix to CaravanSettleUtility.Settle");
+            Log.Message("ImpassableMapMaker: Adding Harmony Postfix to WorldPathGrid.CalculatedCostAt");
+            Log.Message("ImpassableMapMaker: Adding Harmony Postfix to Page_SelectLandingSite.CanDoNext");
         }
 
         [HarmonyPatch(typeof(GenStep_ElevationFertility), "Generate")]
@@ -46,12 +49,12 @@ namespace ImpassableMapMaker
         {
             static void Postfix(Map map)
             {
-                Random r = new Random(map.uniqueID);
-                int basePatch = 50 + r.Next(150);
-                MapGenFloatGrid elevation = MapGenerator.FloatGridNamed("Elevation", map);
-                foreach (IntVec3 current in map.AllCells)
+                if (map.TileInfo.hilliness == Hilliness.Impassable)
                 {
-                    if (map.TileInfo.hilliness == Hilliness.Impassable)
+                    Random r = new Random(map.uniqueID);
+                    int basePatch = 50 + r.Next(150);
+                    MapGenFloatGrid elevation = MapGenerator.FloatGridNamed("Elevation", map);
+                    foreach (IntVec3 current in map.AllCells)
                     {
                         float f = 0;
                         if ((current.x > 6 &&
@@ -59,9 +62,14 @@ namespace ImpassableMapMaker
                             current.z > 6 &&
                             current.z < map.Size.z - 7))
                         {
+                            if (current.x == 0 || current.x == map.Size.x - 1 ||
+                                current.z == 0 || current.z == map.Size.z - 1)
+                            {
+                                map.fogGrid.Notify_FogBlockerRemoved(current);
+                            }
                             f = 3.40282347E+38f;
                         }
-                        else if (r.Next(6) < 2)
+                        else if (r.Next(6) < 1)
                         {
                             f = 0.75f;
                         }
@@ -78,6 +86,25 @@ namespace ImpassableMapMaker
                         }
 
                         elevation[current] = f;
+                    }
+                }
+            }
+        }
+
+        [HarmonyPatch(typeof(CaravanSettleUtility), "Settle")]
+        static class Patch_CaravanSettleUtility
+        {
+            static void Postfix(Caravan caravan)
+            {
+                Map map = caravan.PawnsListForReading[0].Map;
+                if (map.TileInfo.hilliness == Hilliness.Impassable)
+                {
+                    foreach (Pawn p in caravan.PawnsListForReading)
+                    {
+                        if (map.TileInfo.hilliness == Hilliness.Impassable)
+                        {
+                            map.fogGrid.Notify_FogBlockerRemoved(p.Position);
+                        }
                     }
                 }
             }
