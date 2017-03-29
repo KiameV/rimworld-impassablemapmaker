@@ -51,8 +51,16 @@ namespace ImpassableMapMaker
             {
                 if (map.TileInfo.hilliness == Hilliness.Impassable)
                 {
-                    Random r = new Random(map.uniqueID);
-                    int basePatch = 50 + r.Next(150);
+                    Random r = new Random((Find.World.info.name + map.Tile).GetHashCode());
+                    int basePatchX = RandomBasePatch(r, map.Size.x);
+                    int basePatchZ = RandomBasePatch(r, map.Size.z);
+                    IntVec3 basePatchLow = new IntVec3(basePatchX - 27, 0, basePatchZ - 27);
+                    IntVec3 basePatchHigh = new IntVec3(basePatchX + 27, 0, basePatchZ + 27);
+                    /*
+                    Log.Warning(
+                        "size " + map.Size.x + 
+                        " basePatchX " + basePatchX + " basePatchZ " + basePatchZ);
+                    */
                     MapGenFloatGrid elevation = MapGenerator.FloatGridNamed("Elevation", map);
                     foreach (IntVec3 current in map.AllCells)
                     {
@@ -79,8 +87,8 @@ namespace ImpassableMapMaker
                         }
 
                         int i = r.Next(10);
-                        if (current.x > basePatch + i && current.x < basePatch + 50 + i &&
-                            current.z > basePatch + i && current.z < basePatch + 50 + i)
+                        if (current.x > basePatchLow.x + i && current.x < basePatchHigh.x + i &&
+                            current.z > basePatchLow.z + i && current.z < basePatchHigh.z + i)
                         {
                             f = 0;
                         }
@@ -88,6 +96,20 @@ namespace ImpassableMapMaker
                         elevation[current] = f;
                     }
                 }
+            }
+
+            static int RandomBasePatch(Random r, int size)
+            {
+                int middle = size / 2;
+                int halfMiddle = middle / 2;
+                int delta = r.Next(halfMiddle);
+                int sign = r.Next(2);
+                if (sign == 0)
+                {
+                    Console.Write("- ");
+                    delta *= -1;
+                }
+                return middle + delta;
             }
         }
 
