@@ -39,9 +39,8 @@ namespace ImpassableMapMaker
             harmony.PatchAll(Assembly.GetExecutingAssembly());
 
             Log.Message("ImpassableMapMaker: Adding Harmony Postfix to GenStep_ElevationFertility.Generate");
-            Log.Message("ImpassableMapMaker: Adding Harmony Postfix to CaravanSettleUtility.Settle");
             Log.Message("ImpassableMapMaker: Adding Harmony Postfix to WorldPathGrid.CalculatedCostAt");
-            Log.Message("ImpassableMapMaker: Adding Harmony Postfix to Page_SelectLandingSite.CanDoNext");
+            Log.Message("ImpassableMapMaker: Adding Harmony Prefix to TileFinder.IsValidTileForNewSettlement");
         }
 
         [HarmonyPatch(typeof(GenStep_ElevationFertility), "Generate")]
@@ -77,7 +76,7 @@ namespace ImpassableMapMaker
                             }
                             f = 3.40282347E+38f;
                         }
-                        else if (r.Next(6) < 1)
+                        else if (r.Next(42) < 5)
                         {
                             f = 0.75f;
                         }
@@ -112,26 +111,7 @@ namespace ImpassableMapMaker
                 return middle + delta;
             }
         }
-
-        [HarmonyPatch(typeof(CaravanSettleUtility), "Settle")]
-        static class Patch_CaravanSettleUtility
-        {
-            static void Postfix(Caravan caravan)
-            {
-                Map map = caravan.PawnsListForReading[0].Map;
-                if (map.TileInfo.hilliness == Hilliness.Impassable)
-                {
-                    foreach (Pawn p in caravan.PawnsListForReading)
-                    {
-                        if (map.TileInfo.hilliness == Hilliness.Impassable)
-                        {
-                            map.fogGrid.Notify_FogBlockerRemoved(p.Position);
-                        }
-                    }
-                }
-            }
-        }
-
+        
         [HarmonyPatch(typeof(WorldPathGrid), "CalculatedCostAt")]
         static class Patch_CompLaunchable
         {
@@ -141,31 +121,52 @@ namespace ImpassableMapMaker
                     __result -= 1;
             }
         }
-
-        [HarmonyPatch(typeof(Page_SelectLandingSite), "CanDoNext")]
-        static class Patch_Page_SelectLandingSite
+        
+        [HarmonyPatch(typeof(TileFinder), "IsValidTileForNewSettlement")]
+        static class Patch_TileFinder_IsValidTileForNewSettlement
         {
-            static bool Prefix(ref bool __result)
+            static bool Prefix(ref bool __result, int tile, System.Text.StringBuilder reason)
             {
-                int selectedTile = Find.World.UI.SelectedTile;
-                if (selectedTile >= 0)
+                if (tile >= 0)
                 {
-                    Tile tile = Find.WorldGrid[selectedTile];
-                    Faction faction = Find.World.factionManager.FactionAtTile(selectedTile);
-                    if (faction != null)
+                    Tile t = Find.WorldGrid[tile];
+                    if (t.hilliness == Hilliness.Impassable)
                     {
-                        Messages.Message("BaseAlreadyThere".Translate(new object[]
+                        Settlement settlement = Find.WorldObjects.SettlementAt(tile);
+                        if (settlement != null)
                         {
-                            faction.Name
-                        }), MessageSound.RejectInput);
-                        __result = false;
-                        return false;
-                    }
-
-                    if (tile.hilliness == Hilliness.Impassable)
-                    {
-                        Find.GameInitData.startingTile = selectedTile;
-                        __result = true;
+                            if (reason != null)
+                            {
+                                if (settlement.Faction == null)
+                                {
+                                    reason.Append("TileOccupied".Translate());
+                                }
+                                else if (settlement.Faction == Faction.OfPlayer)
+                                {
+                                    reason.Append("YourBaseAlreadyThere".Translate());
+                                }
+                                else
+                                {
+                                    reason.Append("BaseAlreadyThere".Translate(new object[]
+                                    {
+                                        settlement.Faction.Name
+                                    }));
+                                }
+                            }
+                            __result = false;
+                        }
+                        else if (Find.WorldObjects.AnySettlementAtOrAdjacent(tile))
+                        {
+                            if (reason != null)
+                            {
+                                reason.Append("FactionBaseAdjacent".Translate());
+                            }
+                            __result = false;
+                        }
+                        else // Can settle on the impassable terrain
+                        {
+                            __result = true;
+                        }
                         return false;
                     }
                 }
