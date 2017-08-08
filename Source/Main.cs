@@ -26,6 +26,7 @@ using RimWorld;
 using RimWorld.Planet;
 using System;
 using System.Reflection;
+using System.Text;
 using Verse;
 
 namespace ImpassableMapMaker
@@ -40,7 +41,8 @@ namespace ImpassableMapMaker
 
             Log.Message("ImpassableMapMaker: Adding Harmony Postfix to GenStep_ElevationFertility.Generate");
             Log.Message("ImpassableMapMaker: Adding Harmony Postfix to WorldPathGrid.CalculatedCostAt");
-            Log.Message("ImpassableMapMaker: Adding Harmony Prefix to TileFinder.IsValidTileForNewSettlement");
+            Log.Message("ImpassableMapMaker: Adding Harmony Postfix to TileFinder.IsValidTileForNewSettlement");
+            //Log.Message("ImpassableMapMaker: Adding Harmony Postfix to TileFinder.TryFindPassableTileWithTraversalDistance");
         }
 
         [HarmonyPatch(typeof(GenStep_ElevationFertility), "Generate")]
@@ -99,16 +101,14 @@ namespace ImpassableMapMaker
 
             static int RandomBasePatch(Random r, int size)
             {
-                int middle = size / 2;
-                int halfMiddle = middle / 2;
-                int delta = r.Next(halfMiddle);
+                int half = size / 2;
+                int delta = r.Next((int)(0.01 * Settings.PercentOffset * half));
                 int sign = r.Next(2);
                 if (sign == 0)
                 {
-                    Console.Write("- ");
                     delta *= -1;
                 }
-                return middle + delta;
+                return half + delta;
             }
         }
         
@@ -125,13 +125,19 @@ namespace ImpassableMapMaker
         [HarmonyPatch(typeof(TileFinder), "IsValidTileForNewSettlement")]
         static class Patch_TileFinder_IsValidTileForNewSettlement
         {
-            static bool Prefix(ref bool __result, int tile, System.Text.StringBuilder reason)
+            static void Postfix(ref bool __result, int tile, StringBuilder reason)
             {
-                if (tile >= 0)
+                if (__result == false)
                 {
-                    Tile t = Find.WorldGrid[tile];
-                    if (t.hilliness == Hilliness.Impassable)
+                    Tile tile2 = Find.WorldGrid[tile];
+                    if (tile2.hilliness == Hilliness.Impassable)
                     {
+                        if (reason != null)
+                        {
+                            reason.Remove(0, reason.Length);
+                        }
+                        __result = true;
+
                         Settlement settlement = Find.WorldObjects.SettlementAt(tile);
                         if (settlement != null)
                         {
@@ -147,15 +153,12 @@ namespace ImpassableMapMaker
                                 }
                                 else
                                 {
-                                    reason.Append("BaseAlreadyThere".Translate(new object[]
-                                    {
-                                        settlement.Faction.Name
-                                    }));
+                                    reason.Append("BaseAlreadyThere".Translate(new object[] { settlement.Faction.Name }));
                                 }
                             }
                             __result = false;
                         }
-                        else if (Find.WorldObjects.AnySettlementAtOrAdjacent(tile))
+                        if (Find.WorldObjects.AnySettlementAtOrAdjacent(tile))
                         {
                             if (reason != null)
                             {
@@ -163,15 +166,33 @@ namespace ImpassableMapMaker
                             }
                             __result = false;
                         }
-                        else // Can settle on the impassable terrain
+                        if (Find.WorldObjects.AnyMapParentAt(tile) || Current.Game.FindMap(tile) != null)
                         {
-                            __result = true;
+                            if (reason != null)
+                            {
+                                reason.Append("TileOccupied".Translate());
+                            }
+                            __result = false;
                         }
-                        return false;
                     }
                 }
-                return true;
             }
+            
+            /*[HarmonyPatch(typeof(TileFinder), "TryFindPassableTileWithTraversalDistance")]
+            static class Patch_CompLaunchable
+            {
+                static void Postfix(ref bool __result, int rootTile)
+                {
+                    if (__result)
+                    {
+                        Tile tile = Find.WorldGrid[rootTile];
+                        if (tile == null || tile.biome == BiomeDefOf.Ocean)
+                        {
+                            __result = false;
+                        }
+                    }
+                }
+            }*/
         }
     }
 }
