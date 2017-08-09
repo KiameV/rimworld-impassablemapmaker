@@ -42,7 +42,6 @@ namespace ImpassableMapMaker
             Log.Message("ImpassableMapMaker: Adding Harmony Postfix to GenStep_ElevationFertility.Generate");
             Log.Message("ImpassableMapMaker: Adding Harmony Postfix to WorldPathGrid.CalculatedCostAt");
             Log.Message("ImpassableMapMaker: Adding Harmony Postfix to TileFinder.IsValidTileForNewSettlement");
-            //Log.Message("ImpassableMapMaker: Adding Harmony Postfix to TileFinder.TryFindPassableTileWithTraversalDistance");
         }
 
         [HarmonyPatch(typeof(GenStep_ElevationFertility), "Generate")]
@@ -115,9 +114,9 @@ namespace ImpassableMapMaker
         [HarmonyPatch(typeof(WorldPathGrid), "CalculatedCostAt")]
         static class Patch_CompLaunchable
         {
-            static void Postfix(ref int __result)
+            static void Postfix(ref int __result, int tile)
             {
-                if (__result == 1000000)
+                if (__result == 1000000 && Find.WorldGrid[tile].hilliness == Hilliness.Impassable)
                     __result -= 1;
             }
         }
@@ -177,22 +176,6 @@ namespace ImpassableMapMaker
                     }
                 }
             }
-            
-            /*[HarmonyPatch(typeof(TileFinder), "TryFindPassableTileWithTraversalDistance")]
-            static class Patch_CompLaunchable
-            {
-                static void Postfix(ref bool __result, int rootTile)
-                {
-                    if (__result)
-                    {
-                        Tile tile = Find.WorldGrid[rootTile];
-                        if (tile == null || tile.biome == BiomeDefOf.Ocean)
-                        {
-                            __result = false;
-                        }
-                    }
-                }
-            }*/
         }
     }
 }
