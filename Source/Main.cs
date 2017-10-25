@@ -61,7 +61,7 @@ namespace ImpassableMapMaker
                         "size " + map.Size.x + 
                         " basePatchX " + basePatchX + " basePatchZ " + basePatchZ);
                     */
-                    MapGenFloatGrid elevation = MapGenerator.FloatGridNamed("Elevation", map);
+                    MapGenFloatGrid elevation = MapGenerator.FloatGridNamed("Elevation");
                     foreach (IntVec3 current in map.AllCells)
                     {
                         float f = 0;
