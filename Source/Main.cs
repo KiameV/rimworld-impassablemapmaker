@@ -51,11 +51,14 @@ namespace ImpassableMapMaker
             {
                 if (map.TileInfo.hilliness == Hilliness.Impassable)
                 {
+                    int middleWallSmoothness = Settings.MiddleWallSmoothness;
                     Random r = new Random((Find.World.info.name + map.Tile).GetHashCode());
                     int basePatchX = RandomBasePatch(r, map.Size.x);
                     int basePatchZ = RandomBasePatch(r, map.Size.z);
-                    IntVec3 basePatchLow = new IntVec3(basePatchX - 27, 0, basePatchZ - 27);
-                    IntVec3 basePatchHigh = new IntVec3(basePatchX + 27, 0, basePatchZ + 27);
+                    int halfXSize = Settings.OpenAreaSizeX / 2;
+                    int halfZSize = Settings.OpenAreaSizeZ / 2;
+                    IntVec3 basePatchLow = new IntVec3(basePatchX - halfXSize, 0, basePatchZ - halfZSize);
+                    IntVec3 basePatchHigh = new IntVec3(basePatchX + halfXSize, 0, basePatchZ + halfZSize);
                     /*
                     Log.Warning(
                         "size " + map.Size.x + 
@@ -86,7 +89,7 @@ namespace ImpassableMapMaker
                             f = 0.6f;
                         }
 
-                        int i = r.Next(10);
+                        int i = (middleWallSmoothness == 0) ? 0 : r.Next(middleWallSmoothness);
                         if (current.x > basePatchLow.x + i && current.x < basePatchHigh.x + i &&
                             current.z > basePatchLow.z + i && current.z < basePatchHigh.z + i)
                         {

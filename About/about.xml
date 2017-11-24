@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ModMetaData>
-<name>Impassable Map Maker</name>
+<name>Impassable Map Maker - A18</name>
 <author>Kiame Vivacity</author>
 <url>http://steamcommunity.com/sharedfiles/filedetails/?id=893071910</url>
-<targetVersion>0.18.1700</targetVersion>
+<targetVersion>0.18.0</targetVersion>
 <description>Allows settlements on Impassable tiles.</description>
 </ModMetaData>

@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<LanguageData>
+	<ImpassableMapMaker>Impassable Map Maker</ImpassableMapMaker>
+	
+	<ImpassableMapMaker.OpenAreaMaxOffsetFromMiddle>Open Area Max Offset From Middle</ImpassableMapMaker.OpenAreaMaxOffsetFromMiddle>
+	
+	<ImpassableMapMaker.OpenAreaSize>Open Area Size</ImpassableMapMaker.OpenAreaSize>
+	<ImpassableMapMaker.Width>Width</ImpassableMapMaker.Width>
+	<ImpassableMapMaker.Height>Height</ImpassableMapMaker.Height>
+	
+	<ImpassableMapMaker.MiddleOpeningWallSmoothnes>Middle Opening Wall Smoothnes</ImpassableMapMaker.MiddleOpeningWallSmoothnes>
+	<ImpassableMapMaker.Smooth>Smooth</ImpassableMapMaker.Smooth>
+	<ImpassableMapMaker.Rough>Rough</ImpassableMapMaker.Rough>
+	
+	<ImpassableMapMaker.Default>Default</ImpassableMapMaker.Default>
+</LanguageData>
