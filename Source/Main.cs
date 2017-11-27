@@ -68,10 +68,10 @@ namespace ImpassableMapMaker
                     foreach (IntVec3 current in map.AllCells)
                     {
                         float f = 0;
-                        if ((current.x > 6 &&
-                            current.x < map.Size.x - 7 &&
-                            current.z > 6 &&
-                            current.z < map.Size.z - 7))
+                        if ((current.x > Settings.PeremeterBuffer &&
+                            current.x < map.Size.x - (Settings.PeremeterBuffer + 1) &&
+                            current.z > Settings.PeremeterBuffer &&
+                            current.z < map.Size.z - (Settings.PeremeterBuffer + 1)))
                         {
                             if (current.x == 0 || current.x == map.Size.x - 1 ||
                                 current.z == 0 || current.z == map.Size.z - 1)
@@ -89,13 +89,15 @@ namespace ImpassableMapMaker
                             f = 0.6f;
                         }
 
-                        int i = (middleWallSmoothness == 0) ? 0 : r.Next(middleWallSmoothness);
-                        if (current.x > basePatchLow.x + i && current.x < basePatchHigh.x + i &&
-                            current.z > basePatchLow.z + i && current.z < basePatchHigh.z + i)
+                        if (Settings.HasMiddleArea)
                         {
-                            f = 0;
+                            int i = (middleWallSmoothness == 0) ? 0 : r.Next(middleWallSmoothness);
+                            if (current.x > basePatchLow.x + i && current.x < basePatchHigh.x + i &&
+                                current.z > basePatchLow.z + i && current.z < basePatchHigh.z + i)
+                            {
+                                f = 0;
+                            }
                         }
-
                         elevation[current] = f;
                     }
                 }

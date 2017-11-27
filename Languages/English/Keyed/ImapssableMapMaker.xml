@@ -4,9 +4,15 @@
 	
 	<ImpassableMapMaker.OpenAreaMaxOffsetFromMiddle>Open Area Max Offset From Middle</ImpassableMapMaker.OpenAreaMaxOffsetFromMiddle>
 	
+	<ImpassableMapMaker.HasMiddleArea>Has Middle Area</ImpassableMapMaker.HasMiddleArea>
 	<ImpassableMapMaker.OpenAreaSize>Open Area Size</ImpassableMapMaker.OpenAreaSize>
 	<ImpassableMapMaker.Width>Width</ImpassableMapMaker.Width>
 	<ImpassableMapMaker.Height>Height</ImpassableMapMaker.Height>
+	
+	<ImpassableMapMaker.EdgeBuffer>Edge Buffer</ImpassableMapMaker.EdgeBuffer>
+	<ImpassableMapMaker.Smaller>Smaller</ImpassableMapMaker.Smaller>
+	<ImpassableMapMaker.Larger>Larger</ImpassableMapMaker.Larger>
+	<ImpassableMapMaker.EdgeBufferWarning>6 seems to be the minimum for functional play.</ImpassableMapMaker.EdgeBufferWarning>
 	
 	<ImpassableMapMaker.MiddleOpeningWallSmoothnes>Middle Opening Wall Smoothnes</ImpassableMapMaker.MiddleOpeningWallSmoothnes>
 	<ImpassableMapMaker.Smooth>Smooth</ImpassableMapMaker.Smooth>
