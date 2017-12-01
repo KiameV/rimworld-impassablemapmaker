@@ -122,7 +122,9 @@ namespace ImpassableMapMaker
             static void Postfix(ref int __result, int tile)
             {
                 if (__result == 1000000 && Find.WorldGrid[tile].hilliness == Hilliness.Impassable)
-                    __result -= 1;
+                {
+                    __result = 45000;
+                }
             }
         }
         

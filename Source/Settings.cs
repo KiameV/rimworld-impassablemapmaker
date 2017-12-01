@@ -53,7 +53,7 @@ namespace ImpassableMapMaker
             Listing_Standard ls = new Listing_Standard();
             ls.Begin(new Rect(5f, 45f, 400f, 600f));
 
-            ls.CheckboxLabeled("ImpassableMapMaker.HasMiddleArea", ref HasMiddleArea);
+            ls.CheckboxLabeled("ImpassableMapMaker.HasMiddleArea".Translate(), ref HasMiddleArea);
             if (HasMiddleArea)
             {
                 ls.Label("ImpassableMapMaker.OpenAreaMaxOffsetFromMiddle".Translate() + ": " + percentOffset.ToString("N1") + "%");
