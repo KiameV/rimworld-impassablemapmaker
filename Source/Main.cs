@@ -51,6 +51,8 @@ namespace ImpassableMapMaker
             {
                 if (map.TileInfo.hilliness == Hilliness.Impassable)
                 {
+                    int radius = (int)(((float)map.Size.x + map.Size.z) * 0.25f);
+
                     int middleWallSmoothness = Settings.MiddleWallSmoothness;
                     Random r = new Random((Find.World.info.name + map.Tile).GetHashCode());
                     int basePatchX = RandomBasePatch(r, map.Size.x);
@@ -59,28 +61,20 @@ namespace ImpassableMapMaker
                     int halfZSize = Settings.OpenAreaSizeZ / 2;
                     IntVec3 basePatchLow = new IntVec3(basePatchX - halfXSize, 0, basePatchZ - halfZSize);
                     IntVec3 basePatchHigh = new IntVec3(basePatchX + halfXSize, 0, basePatchZ + halfZSize);
-                    /*
+#if DEBUG
                     Log.Warning(
                         "size " + map.Size.x + 
                         " basePatchX " + basePatchX + " basePatchZ " + basePatchZ);
-                    */
+#endif
                     MapGenFloatGrid elevation = MapGenerator.FloatGridNamed("Elevation");
                     foreach (IntVec3 current in map.AllCells)
                     {
                         float f = 0;
-                        if ((current.x > Settings.PeremeterBuffer &&
-                            current.x < map.Size.x - (Settings.PeremeterBuffer + 1) &&
-                            current.z > Settings.PeremeterBuffer &&
-                            current.z < map.Size.z - (Settings.PeremeterBuffer + 1)))
+                        if (IsMountain(current, map, radius))
                         {
-                            if (current.x == 0 || current.x == map.Size.x - 1 ||
-                                current.z == 0 || current.z == map.Size.z - 1)
-                            {
-                                map.fogGrid.Notify_FogBlockerRemoved(current);
-                            }
                             f = 3.40282347E+38f;
                         }
-                        else if (r.Next(42) < 5)
+                        else if (Settings.ScatteredRocks && IsScatteredRock(current, r, map, radius))
                         {
                             f = 0.75f;
                         }
@@ -98,9 +92,57 @@ namespace ImpassableMapMaker
                                 f = 0;
                             }
                         }
+
+                        if (current.x == 0 || current.x == map.Size.x - 1 ||
+                            current.z == 0 || current.z == map.Size.z - 1)
+                        {
+                            map.fogGrid.Notify_FogBlockerRemoved(current);
+                        }
                         elevation[current] = f;
                     }
                 }
+            }
+
+            private static bool IsMountain(IntVec3 i, Map map, int radius)
+            {
+                if (Settings.shape == ImpassableShape.Round)
+                {
+                    // Round
+                    if (i.x <= 4 || i.x >= map.Size.x - 5 ||
+                        i.z <= 4 || i.z >= map.Size.z - 5)
+                    {
+                        return false;
+                    }
+
+                    int x = i.x - (int)(map.Size.x * 0.5f);
+                    int z = i.z - (int)(map.Size.z * 0.5f);
+                    return Math.Sqrt(Math.Pow(x, 2) + Math.Pow(z, 2)) < radius;
+                }
+                // Square
+                return
+                    i.x > Settings.PeremeterBuffer &&
+                    i.x < map.Size.x - (Settings.PeremeterBuffer + 1) &&
+                    i.z > Settings.PeremeterBuffer &&
+                    i.z < map.Size.z - (Settings.PeremeterBuffer + 1);
+            }
+
+            private static bool IsScatteredRock(IntVec3 i, Random r, Map map, int radius)
+            {
+                if (r.Next(42) >= 5)
+                {
+                    return false;
+                }
+
+                if (Settings.shape == ImpassableShape.Round)
+                {
+                    // Round
+                    int x = i.x - (int)(map.Size.x * 0.5f);
+                    int z = i.z - (int)(map.Size.z * 0.5f);
+                    return Math.Sqrt(Math.Pow(x, 2) + Math.Pow(z, 2)) < radius + 8;
+                }
+
+                // Square
+                return true;
             }
 
             static int RandomBasePatch(Random r, int size)

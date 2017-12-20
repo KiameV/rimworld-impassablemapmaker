@@ -4,6 +4,11 @@
 	
 	<ImpassableMapMaker.OpenAreaMaxOffsetFromMiddle>Open Area Max Offset From Middle</ImpassableMapMaker.OpenAreaMaxOffsetFromMiddle>
 	
+	<ImpassableMapMaker.MountainShape>Mountain Shape</ImpassableMapMaker.MountainShape>
+	<ImpassableMapMaker.ShapeSquare>Square</ImpassableMapMaker.ShapeSquare>
+	<ImpassableMapMaker.ShapeRound>Round</ImpassableMapMaker.ShapeRound>
+	<ImpassableMapMaker.ScatteredRocks>Scattered Rocks</ImpassableMapMaker.ScatteredRocks>
+	
 	<ImpassableMapMaker.HasMiddleArea>Has Middle Area</ImpassableMapMaker.HasMiddleArea>
 	<ImpassableMapMaker.OpenAreaSize>Open Area Size</ImpassableMapMaker.OpenAreaSize>
 	<ImpassableMapMaker.Width>Width</ImpassableMapMaker.Width>
