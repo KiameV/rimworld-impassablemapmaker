@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Text;
+using UnityEngine;
 using Verse;
 
 namespace ImpassableMapMaker
@@ -34,6 +35,7 @@ namespace ImpassableMapMaker
         private const int DEFAULT_OPEN_AREA_SIZE = 54;
         private const int DEFAULT_WALLS_SMOOTHNESS = 10;
         private const int DEFAULT_PEREMETER_BUFFER = 6;
+        private const int DEFAULT_QUARY_SIZE = 5;
 
         private static Vector2 scrollPosition = Vector2.zero;
 
@@ -46,6 +48,8 @@ namespace ImpassableMapMaker
         public static bool HasMiddleArea = true;
         public static ImpassableShape shape = ImpassableShape.Square;
         public static bool ScatteredRocks = true;
+        public static bool IncludeQuarySpot = false;
+        public static int QuarySize = DEFAULT_QUARY_SIZE;
 
         public override void ExposeData()
         {
@@ -61,6 +65,8 @@ namespace ImpassableMapMaker
             Scribe_Values.Look<int>(ref MiddleWallSmoothness, "ImpassableMapMaker.MakeWallsSmooth", DEFAULT_WALLS_SMOOTHNESS, false);
             Scribe_Values.Look<string>(ref s, "ImpassableMapMaker.Shape", ImpassableShape.Square.ToString(), false);
             Scribe_Values.Look<bool>(ref ScatteredRocks, "ImpassableMapMaker.scatteredRocks", true, false);
+            Scribe_Values.Look<bool>(ref IncludeQuarySpot, "ImpassableMapMaker.IncludeQuarySpot", false, false);
+            Scribe_Values.Look<int>(ref QuarySize, "ImpassableMapMaker.QuarySize", DEFAULT_QUARY_SIZE, false);
 
             if (Scribe.mode != LoadSaveMode.Saving)
             {
@@ -140,6 +146,24 @@ namespace ImpassableMapMaker
                     PeremeterBuffer = DEFAULT_PEREMETER_BUFFER;
                 }
                 ls.Label("ImpassableMapMaker.EdgeBufferWarning".Translate());
+                ls.GapLine(GAP_SIZE);
+            }
+
+            ls.CheckboxLabeled("ImpassableMapMaker.IncludeQuarySpot".Translate(), ref IncludeQuarySpot);
+            if (IncludeQuarySpot)
+            {
+                ls.Label("<< " + "ImpassableMapMaker.Smaller".Translate() + " -- " + "ImpassableMapMaker.Larger".Translate() + " >>");
+                QuarySize = (int)ls.Slider(QuarySize, 3, 20);
+                StringBuilder sb = new StringBuilder("(");
+                sb.Append(QuarySize.ToString());
+                sb.Append(", ");
+                sb.Append(QuarySize.ToString());
+                sb.Append(")");
+                ls.Label(sb.ToString());
+                if (ls.ButtonText("ImpassableMapMaker.Default".Translate()))
+                {
+                    QuarySize = DEFAULT_QUARY_SIZE;
+                }
             }
             
             ls.End();

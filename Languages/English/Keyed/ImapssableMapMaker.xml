@@ -23,5 +23,7 @@
 	<ImpassableMapMaker.Smooth>Smooth</ImpassableMapMaker.Smooth>
 	<ImpassableMapMaker.Rough>Rough</ImpassableMapMaker.Rough>
 	
+	<ImpassableMapMaker.IncludeQuarySpot>Include Quary Spot</ImpassableMapMaker.IncludeQuarySpot>
+	
 	<ImpassableMapMaker.Default>Default</ImpassableMapMaker.Default>
 </LanguageData>

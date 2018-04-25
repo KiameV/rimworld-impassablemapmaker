@@ -44,6 +44,23 @@ namespace ImpassableMapMaker
             Log.Message("ImpassableMapMaker: Adding Harmony Postfix to TileFinder.IsValidTileForNewSettlement");
         }
 
+        class TerrainOverride
+        {
+            public readonly IntVec3 Low, High;
+            public TerrainOverride(int lowX, int lowZ, int highX, int highZ)
+            {
+                this.Low = new IntVec3(lowX, 0, lowZ);
+                this.High = new IntVec3(highX, 0, highZ);
+            }
+
+            public bool IsInside(IntVec3 i, int rand = 0)
+            {
+                return (
+                    i.x >= this.Low.x + rand && i.x <= this.High.x + rand &&
+                    i.z >= this.Low.z + rand && i.z <= this.High.z + rand);
+            }
+        }
+
         [HarmonyPatch(typeof(GenStep_ElevationFertility), "Generate")]
         static class Patch_GenStep_Terrain
         {
@@ -55,52 +72,72 @@ namespace ImpassableMapMaker
 
                     int middleWallSmoothness = Settings.MiddleWallSmoothness;
                     Random r = new Random((Find.World.info.name + map.Tile).GetHashCode());
-                    int basePatchX = RandomBasePatch(r, map.Size.x);
-                    int basePatchZ = RandomBasePatch(r, map.Size.z);
-                    int halfXSize = Settings.OpenAreaSizeX / 2;
-                    int halfZSize = Settings.OpenAreaSizeZ / 2;
-                    IntVec3 basePatchLow = new IntVec3(basePatchX - halfXSize, 0, basePatchZ - halfZSize);
-                    IntVec3 basePatchHigh = new IntVec3(basePatchX + halfXSize, 0, basePatchZ + halfZSize);
+
+                    TerrainOverride middleArea = null;
+                    if (Settings.HasMiddleArea)
+                    {
+                        middleArea = GenerateMiddleArea(r, map);
+                    }
+
+                    TerrainOverride quaryArea = null;
+                    if (Settings.IncludeQuarySpot)
+                    {
+                        quaryArea = DetermineQuary(r, map, middleArea);
+                    }
 #if DEBUG
                     Log.Warning(
                         "size " + map.Size.x + 
                         " basePatchX " + basePatchX + " basePatchZ " + basePatchZ);
 #endif
-                    MapGenFloatGrid elevation = MapGenerator.FloatGridNamed("Elevation");
+                    MapGenFloatGrid fertility = MapGenerator.Fertility;
+                    MapGenFloatGrid elevation = MapGenerator.Elevation;
                     foreach (IntVec3 current in map.AllCells)
                     {
-                        float f = 0;
+                        float elev = 0;
                         if (IsMountain(current, map, radius))
                         {
-                            f = 3.40282347E+38f;
+                            elev = 3.40282347E+38f;
                         }
                         else if (Settings.ScatteredRocks && IsScatteredRock(current, r, map, radius))
                         {
-                            f = 0.75f;
+                            elev = 0.75f;
                         }
                         else
                         {
-                            f = 0.6f;
+                            elev = 0.57f;
                         }
 
-                        if (Settings.HasMiddleArea)
+                        if (quaryArea != null && quaryArea.IsInside(current))
+                        {
+                            // Gravel
+                            elev = 0.57f;
+                        }
+                        else if (middleArea != null)
                         {
                             int i = (middleWallSmoothness == 0) ? 0 : r.Next(middleWallSmoothness);
-                            if (current.x > basePatchLow.x + i && current.x < basePatchHigh.x + i &&
-                                current.z > basePatchLow.z + i && current.z < basePatchHigh.z + i)
+                            if (middleArea.IsInside(current, i))
                             {
-                                f = 0;
+                                elev = 0;
                             }
                         }
 
-                        if (current.x == 0 || current.x == map.Size.x - 1 ||
+                        /*if (current.x == 0 || current.x == map.Size.x - 1 ||
                             current.z == 0 || current.z == map.Size.z - 1)
                         {
                             map.fogGrid.Notify_FogBlockerRemoved(current);
-                        }
-                        elevation[current] = f;
+                        }*/
+                        elevation[current] = elev;
                     }
                 }
+            }
+
+            private static TerrainOverride GenerateMiddleArea(Random r, Map map)
+            {
+                int basePatchX = RandomBasePatch(r, map.Size.x);
+                int basePatchZ = RandomBasePatch(r, map.Size.z);
+                int halfXSize = Settings.OpenAreaSizeX / 2;
+                int halfZSize = Settings.OpenAreaSizeZ / 2;
+                return new TerrainOverride(basePatchX - halfXSize, basePatchZ - halfZSize, basePatchX + halfXSize, basePatchZ + halfZSize);
             }
 
             private static bool IsMountain(IntVec3 i, Map map, int radius)
@@ -155,6 +192,56 @@ namespace ImpassableMapMaker
                     delta *= -1;
                 }
                 return half + delta;
+            }
+
+            static TerrainOverride DetermineQuary(Random r, Map map, TerrainOverride middleArea)
+            {
+                int quarterMapX = map.Size.x / 4;
+                int quarterMapZ = map.Size.z / 4;
+                int lowX, highX, lowZ, highZ;
+                int quarySize = Settings.QuarySize;
+                if (r.Next(2) == 0)
+                {
+                    highX = middleArea.Low.x - 2;
+                    lowX = highX - quarterMapX;
+                    int x = DetermineRandomPlacement(lowX, highX, quarySize, r);
+                    lowX = x - quarySize;
+                    highX = x;
+                }
+                else
+                {
+                    lowX = middleArea.High.x + 2;
+                    highX = lowX + quarterMapX;
+                    int x = DetermineRandomPlacement(lowX, highX, quarySize, r);
+                    lowX = x;
+                    highX = x + quarySize;
+                }
+
+                if (r.Next(2) == 0)
+                {
+                    highZ = middleArea.Low.z - 2;
+                    lowZ = highZ - quarterMapZ;
+                    int z = DetermineRandomPlacement(lowZ, highZ, quarySize, r);
+                    lowZ = z - quarySize;
+                    highZ = z;
+                }
+                else
+                {
+                    lowZ = middleArea.High.z + 2;
+                    highZ = lowZ + quarterMapZ;
+                    int z = DetermineRandomPlacement(lowZ, highZ, quarySize, r);
+                    lowZ = z;
+                    highZ = z + quarySize;
+                }
+                
+                return new TerrainOverride(lowX, lowZ, highX, highZ);
+            }
+
+            static int DetermineRandomPlacement(int low, int high, int size, Random r)
+            {
+                low += size;
+                high -= size;
+                return r.Next(high - low) + low;
             }
         }
         
