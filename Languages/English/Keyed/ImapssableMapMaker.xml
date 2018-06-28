@@ -3,6 +3,8 @@
 	<ImpassableMapMaker>Impassable Map Maker</ImpassableMapMaker>
 	
 	<ImpassableMapMaker.OpenAreaMaxOffsetFromMiddle>Open Area Max Offset From Middle</ImpassableMapMaker.OpenAreaMaxOffsetFromMiddle>
+
+	<ImpassableMapMaker.WorldMapMovementDifficulty>World Map Movement Difficulty</ImpassableMapMaker.WorldMapMovementDifficulty>
 	
 	<ImpassableMapMaker.MountainShape>Mountain Shape</ImpassableMapMaker.MountainShape>
 	<ImpassableMapMaker.ShapeSquare>Square</ImpassableMapMaker.ShapeSquare>

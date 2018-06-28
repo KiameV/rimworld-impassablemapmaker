@@ -36,6 +36,7 @@ namespace ImpassableMapMaker
         private const int DEFAULT_WALLS_SMOOTHNESS = 10;
         private const int DEFAULT_PEREMETER_BUFFER = 6;
         private const int DEFAULT_QUARY_SIZE = 5;
+        private const float DEFAULT_MOVEMENT_DIFFICULTY = 4.5f;
 
         private static Vector2 scrollPosition = Vector2.zero;
 
@@ -50,6 +51,8 @@ namespace ImpassableMapMaker
         public static bool ScatteredRocks = true;
         public static bool IncludeQuarySpot = false;
         public static int QuarySize = DEFAULT_QUARY_SIZE;
+        public static float MovementDifficulty = DEFAULT_MOVEMENT_DIFFICULTY;
+        private static string movementDifficultyBuffer = DEFAULT_MOVEMENT_DIFFICULTY.ToString();
 
         public override void ExposeData()
         {
@@ -67,6 +70,7 @@ namespace ImpassableMapMaker
             Scribe_Values.Look<bool>(ref ScatteredRocks, "ImpassableMapMaker.scatteredRocks", true, false);
             Scribe_Values.Look<bool>(ref IncludeQuarySpot, "ImpassableMapMaker.IncludeQuarySpot", false, false);
             Scribe_Values.Look<int>(ref QuarySize, "ImpassableMapMaker.QuarySize", DEFAULT_QUARY_SIZE, false);
+            Scribe_Values.Look<float>(ref MovementDifficulty, "ImpassableMapMaker.MovementDifficulty", DEFAULT_MOVEMENT_DIFFICULTY, false);
 
             if (Scribe.mode != LoadSaveMode.Saving)
             {
@@ -89,6 +93,16 @@ namespace ImpassableMapMaker
             Widgets.BeginScrollView(scroll, ref scrollPosition, view, true);
             Listing_Standard ls = new Listing_Standard();
             ls.Begin(view);
+
+            ls.TextFieldNumericLabeled<float>(
+                "ImpassableMapMaker.WorldMapMovementDifficulty".Translate(), 
+                ref MovementDifficulty, ref movementDifficultyBuffer, 1f, 100f);
+            if (ls.ButtonText("ImpassableMapMaker.Default".Translate()))
+            {
+                MovementDifficulty = DEFAULT_MOVEMENT_DIFFICULTY;
+                movementDifficultyBuffer = DEFAULT_MOVEMENT_DIFFICULTY.ToString();
+            }
+            ls.GapLine(GAP_SIZE);
 
             ls.Label("ImpassableMapMaker.MountainShape".Translate());
             if (ls.RadioButton("ImpassableMapMaker.ShapeSquare".Translate(), shape == ImpassableShape.Square))
@@ -167,6 +181,7 @@ namespace ImpassableMapMaker
             }
             
             ls.End();
+            Widgets.EndScrollView();
         }
     }
 }
