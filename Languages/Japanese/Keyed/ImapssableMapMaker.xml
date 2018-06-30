@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <ImpassableMapMaker>Impassable Map Maker</ImpassableMapMaker>
+
+  <ImpassableMapMaker.OpenAreaMaxOffsetFromMiddle>開けたエリア(中央位置)の最大オフセット</ImpassableMapMaker.OpenAreaMaxOffsetFromMiddle>
+
+  <ImpassableMapMaker.WorldMapMovementDifficulty>ワールドマップ移動の難易度</ImpassableMapMaker.WorldMapMovementDifficulty>
+
+  <ImpassableMapMaker.MountainShape>山岳の形状</ImpassableMapMaker.MountainShape>
+  <ImpassableMapMaker.ShapeSquare>四角形</ImpassableMapMaker.ShapeSquare>
+  <ImpassableMapMaker.ShapeRound>円形</ImpassableMapMaker.ShapeRound>
+  <ImpassableMapMaker.ScatteredRocks>散乱した岩山</ImpassableMapMaker.ScatteredRocks>
+
+  <ImpassableMapMaker.HasMiddleArea>中央に空き地の有無</ImpassableMapMaker.HasMiddleArea>
+  <ImpassableMapMaker.OpenAreaSize>空き地のサイズ</ImpassableMapMaker.OpenAreaSize>
+  <ImpassableMapMaker.Width>横幅</ImpassableMapMaker.Width>
+  <ImpassableMapMaker.Height>縦幅</ImpassableMapMaker.Height>
+
+  <ImpassableMapMaker.EdgeBuffer>マップ隅の緩衝地帯</ImpassableMapMaker.EdgeBuffer>
+  <ImpassableMapMaker.Smaller>最小</ImpassableMapMaker.Smaller>
+  <ImpassableMapMaker.Larger>最大</ImpassableMapMaker.Larger>
+  <ImpassableMapMaker.EdgeBufferWarning>遊ぶのに適しているのは6以上です。</ImpassableMapMaker.EdgeBufferWarning>
+
+  <ImpassableMapMaker.MiddleOpeningWallSmoothnes>空き地の壁の種類</ImpassableMapMaker.MiddleOpeningWallSmoothnes>
+  <ImpassableMapMaker.Smooth>石ブロック壁</ImpassableMapMaker.Smooth>
+  <ImpassableMapMaker.Rough>荒い自然の壁</ImpassableMapMaker.Rough>
+
+  <ImpassableMapMaker.IncludeQuarySpot>採掘場所を含む</ImpassableMapMaker.IncludeQuarySpot>
+
+  <ImpassableMapMaker.Default>初期設定</ImpassableMapMaker.Default>
+
+</LanguageData>
