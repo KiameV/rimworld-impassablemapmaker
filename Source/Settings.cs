@@ -71,6 +71,7 @@ namespace ImpassableMapMaker
             Scribe_Values.Look<bool>(ref IncludeQuarySpot, "ImpassableMapMaker.IncludeQuarySpot", false, false);
             Scribe_Values.Look<int>(ref QuarySize, "ImpassableMapMaker.QuarySize", DEFAULT_QUARY_SIZE, false);
             Scribe_Values.Look<float>(ref MovementDifficulty, "ImpassableMapMaker.MovementDifficulty", DEFAULT_MOVEMENT_DIFFICULTY, false);
+            movementDifficultyBuffer = MovementDifficulty.ToString();
 
             if (Scribe.mode != LoadSaveMode.Saving)
             {
