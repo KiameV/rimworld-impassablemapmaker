@@ -204,6 +204,12 @@ namespace ImpassableMapMaker
             int quarterMapZ = map.Size.z / 4;
             int lowX, highX, lowZ, highZ;
             int quarySize = Settings.QuarySize;
+
+            if (middleArea == null)
+            {
+                middleArea = new TerrainOverride(quarterMapX * 2, quarterMapZ * 2, quarterMapX * 2, quarterMapZ * 2);
+            }
+
             if (r.Next(2) == 0)
             {
                 highX = middleArea.Low.x - 2;
