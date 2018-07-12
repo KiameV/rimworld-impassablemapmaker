@@ -12,16 +12,19 @@
 	<ImpassableMapMaker.ScatteredRocks>Scattered Rocks</ImpassableMapMaker.ScatteredRocks>
 	
 	<ImpassableMapMaker.HasMiddleArea>Has Middle Area</ImpassableMapMaker.HasMiddleArea>
-	<ImpassableMapMaker.OpenAreaSize>Open Area Size</ImpassableMapMaker.OpenAreaSize>
+	<ImpassableMapMaker.MiddleAreaShape>Middle Area Shape</ImpassableMapMaker.MiddleAreaShape>
+	
+	<ImpassableMapMaker.OpenAreaSize>Middle Area Size</ImpassableMapMaker.OpenAreaSize>
 	<ImpassableMapMaker.Width>Width</ImpassableMapMaker.Width>
 	<ImpassableMapMaker.Height>Height</ImpassableMapMaker.Height>
+	<ImpassableMapMaker.Radius>Radius</ImpassableMapMaker.Radius>
 	
 	<ImpassableMapMaker.EdgeBuffer>Edge Buffer</ImpassableMapMaker.EdgeBuffer>
 	<ImpassableMapMaker.Smaller>Smaller</ImpassableMapMaker.Smaller>
 	<ImpassableMapMaker.Larger>Larger</ImpassableMapMaker.Larger>
 	<ImpassableMapMaker.EdgeBufferWarning>6 seems to be the minimum for functional play.</ImpassableMapMaker.EdgeBufferWarning>
 	
-	<ImpassableMapMaker.MiddleOpeningWallSmoothnes>Middle Opening Wall Smoothnes</ImpassableMapMaker.MiddleOpeningWallSmoothnes>
+	<ImpassableMapMaker.MiddleOpeningWallSmoothnes>Middle Area Wall Smoothnes</ImpassableMapMaker.MiddleOpeningWallSmoothnes>
 	<ImpassableMapMaker.Smooth>Smooth</ImpassableMapMaker.Smooth>
 	<ImpassableMapMaker.Rough>Rough</ImpassableMapMaker.Rough>
 	

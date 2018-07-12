@@ -1,27 +1,4 @@
-﻿/*
- * MIT License
- * 
- * Copyright (c) [2017] [Travis Offtermatt]
- * 
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- * 
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- */
-using System.Text;
+﻿using System.Text;
 using UnityEngine;
 using Verse;
 
@@ -65,6 +42,7 @@ namespace ImpassableMapMaker
 
         private static float percentOffset = DEFAULT_PERCENT_OFFSET;
         public static float PercentOffset { get { return percentOffset; } }
+        public static ImpassableShape OpenAreaShape = ImpassableShape.Square;
         public static int OpenAreaSizeX = DEFAULT_OPEN_AREA_SIZE;
         public static int OpenAreaSizeZ = DEFAULT_OPEN_AREA_SIZE;
         public static int MiddleWallSmoothness = 10;
@@ -82,9 +60,11 @@ namespace ImpassableMapMaker
             base.ExposeData();
 
             string s = shape.ToString();
+            string openAreaShape = OpenAreaShape.ToString();
 
             Scribe_Values.Look<bool>(ref HasMiddleArea, "ImpassableMapMaker.hasMiddleArea", true, false);
             Scribe_Values.Look<float>(ref percentOffset, "ImpassableMapMaker.percentOffset", DEFAULT_PERCENT_OFFSET, false);
+            Scribe_Values.Look<string>(ref openAreaShape, "ImpassableMapMaker.OpenAreaShape", ImpassableShape.Square.ToString(), false);
             Scribe_Values.Look<int>(ref OpenAreaSizeX, "ImpassableMapMaker.OpenAreaSizeX", DEFAULT_OPEN_AREA_SIZE, false);
             Scribe_Values.Look<int>(ref OpenAreaSizeZ, "ImpassableMapMaker.OpenAreaSizeZ", DEFAULT_OPEN_AREA_SIZE, false);
             Scribe_Values.Look<int>(ref PeremeterBuffer, "ImpassableMapMaker.PeremeterBuffer", DEFAULT_PEREMETER_BUFFER, false);
@@ -98,13 +78,22 @@ namespace ImpassableMapMaker
 
             if (Scribe.mode != LoadSaveMode.Saving)
             {
-                if (ImpassableShape.Square.ToString().Equals(s))
+                if (ImpassableShape.Round.ToString().Equals(s))
+                {
+                    shape = ImpassableShape.Round;
+                }
+                else
                 {
                     shape = ImpassableShape.Square;
                 }
-                else if (ImpassableShape.Round.ToString().Equals(s))
+
+                if (ImpassableShape.Round.ToString().Equals(openAreaShape))
                 {
-                    shape = ImpassableShape.Round;
+                    OpenAreaShape = ImpassableShape.Round;
+                }
+                else
+                {
+                    OpenAreaShape = ImpassableShape.Square;
                 }
             }
         }
@@ -137,30 +126,54 @@ namespace ImpassableMapMaker
             {
                 shape = ImpassableShape.Round;
             }
-            ls.Gap(6);
+            ls.Gap(GAP_SIZE);
+
             ls.CheckboxLabeled("ImpassableMapMaker.ScatteredRocks".Translate(), ref ScatteredRocks);
             ls.GapLine(GAP_SIZE);
 
             ls.CheckboxLabeled("ImpassableMapMaker.HasMiddleArea".Translate(), ref HasMiddleArea);
+            ls.Gap(6);
+
             if (HasMiddleArea)
             {
+                ls.Label("ImpassableMapMaker.MiddleAreaShape".Translate());
+                ls.Gap(2);
+                if (ls.RadioButton("ImpassableMapMaker.ShapeSquare".Translate(), OpenAreaShape == ImpassableShape.Square))
+                {
+                    OpenAreaShape = ImpassableShape.Square;
+                }
+                if (ls.RadioButton("ImpassableMapMaker.ShapeRound".Translate(), OpenAreaShape == ImpassableShape.Round))
+                {
+                    OpenAreaShape = ImpassableShape.Round;
+                }
+                ls.Gap(2);
+
+                ls.Label("ImpassableMapMaker.OpenAreaSize".Translate());
+                if (OpenAreaShape == ImpassableShape.Square)
+                {
+                    ls.Label("ImpassableMapMaker.Width".Translate() + ": " + OpenAreaSizeZ);
+                    OpenAreaSizeZ = (int)ls.Slider(OpenAreaSizeZ, 40, 75);
+                    ls.Label("ImpassableMapMaker.Height".Translate() + ": " + OpenAreaSizeX);
+                    OpenAreaSizeX = (int)ls.Slider(OpenAreaSizeX, 40, 75);
+                }
+                else
+                {
+                    ls.Label("ImpassableMapMaker.Radius".Translate() + ": " + OpenAreaSizeZ);
+                    OpenAreaSizeX = (int)ls.Slider(OpenAreaSizeX, 40, 75);
+                    OpenAreaSizeZ = OpenAreaSizeX;
+                }
+                if (ls.ButtonText("ImpassableMapMaker.Default".Translate()))
+                {
+                    OpenAreaSizeX = DEFAULT_OPEN_AREA_SIZE;
+                    OpenAreaSizeZ = DEFAULT_OPEN_AREA_SIZE;
+                }
+                ls.Gap(GAP_SIZE);
+
                 ls.Label("ImpassableMapMaker.OpenAreaMaxOffsetFromMiddle".Translate() + ": " + percentOffset.ToString("N1") + "%");
                 percentOffset = ls.Slider(percentOffset, 0, 25);
                 if (ls.ButtonText("ImpassableMapMaker.Default".Translate()))
                 {
                     percentOffset = DEFAULT_PERCENT_OFFSET;
-                }
-                ls.Gap(GAP_SIZE);
-
-                ls.Label("ImpassableMapMaker.OpenAreaSize".Translate());
-                ls.Label("ImpassableMapMaker.Width".Translate() + ": " + OpenAreaSizeZ);
-                OpenAreaSizeZ = (int)ls.Slider(OpenAreaSizeZ, 40, 75);
-                ls.Label("ImpassableMapMaker.Height".Translate() + ": " + OpenAreaSizeX);
-                OpenAreaSizeX = (int)ls.Slider(OpenAreaSizeX, 40, 75);
-                if (ls.ButtonText("ImpassableMapMaker.Default".Translate()))
-                {
-                    OpenAreaSizeX = DEFAULT_OPEN_AREA_SIZE;
-                    OpenAreaSizeZ = DEFAULT_OPEN_AREA_SIZE;
                 }
                 ls.Gap(GAP_SIZE);
 

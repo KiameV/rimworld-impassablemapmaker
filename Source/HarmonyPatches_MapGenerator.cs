@@ -1,32 +1,8 @@
-﻿/*
- * MIT License
- * 
- * Copyright (c) [2017] [Travis Offtermatt]
- * 
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- * 
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- */
-using Harmony;
+﻿using Harmony;
 using RimWorld;
 using RimWorld.Planet;
 using System;
 using System.Reflection;
-using System.Text;
 using Verse;
 
 namespace ImpassableMapMaker
@@ -48,10 +24,50 @@ namespace ImpassableMapMaker
         }
     }
 
-    internal class TerrainOverride
+    internal interface ITerrainOverride
+    {
+        int HighZ { get; }
+        int LowZ { get; }
+        int HighX { get; }
+        int LowX { get; }
+
+        bool IsInside(IntVec3 i, int rand = 0);
+    }
+
+    internal class TerrainOverrideRound : ITerrainOverride
+    {
+        public readonly IntVec3 Center;
+        public readonly int Radius;
+
+        public TerrainOverrideRound(IntVec3 center, int radius)
+        {
+            this.Center = center;
+            this.Radius = radius;
+        }
+
+        public bool IsInside(IntVec3 i, int rand = 0)
+        {
+            if (i.x <= this.Center.x - Radius || i.x >= this.Center.x + Radius ||
+                i.z <= this.Center.z - Radius || i.z >= this.Center.z + Radius)
+            {
+                return false;
+            }
+
+            int x = i.x - this.Center.x;
+            int z = i.z - this.Center.z;
+            return Math.Pow(x, 2) + Math.Pow(z, 2) < Math.Pow(this.Radius, 2);
+        }
+
+        public int LowX { get { return this.Center.x - this.Radius; } }
+        public int HighX { get { return this.Center.x + this.Radius; } }
+        public int LowZ { get { return this.Center.z - this.Radius; } }
+        public int HighZ { get { return this.Center.z + this.Radius; } }
+    }
+
+    internal class TerrainOverrideSquare : ITerrainOverride
     {
         public readonly IntVec3 Low, High;
-        public TerrainOverride(int lowX, int lowZ, int highX, int highZ)
+        public TerrainOverrideSquare(int lowX, int lowZ, int highX, int highZ)
         {
             this.Low = new IntVec3(lowX, 0, lowZ);
             this.High = new IntVec3(highX, 0, highZ);
@@ -63,6 +79,11 @@ namespace ImpassableMapMaker
                 i.x >= this.Low.x + rand && i.x <= this.High.x + rand &&
                 i.z >= this.Low.z + rand && i.z <= this.High.z + rand);
         }
+
+        public int LowX { get { return this.Low.x; } }
+        public int HighX { get { return this.High.x; } }
+        public int LowZ { get { return this.Low.z; } }
+        public int HighZ { get { return this.High.z; } }
     }
 
     [HarmonyPatch(typeof(GenStep_ElevationFertility), "Generate")]
@@ -77,13 +98,13 @@ namespace ImpassableMapMaker
                 int middleWallSmoothness = Settings.MiddleWallSmoothness;
                 Random r = new Random((Find.World.info.name + map.Tile).GetHashCode());
 
-                TerrainOverride middleArea = null;
+                ITerrainOverride middleArea = null;
                 if (Settings.HasMiddleArea)
                 {
                     middleArea = GenerateMiddleArea(r, map);
                 }
 
-                TerrainOverride quaryArea = null;
+                ITerrainOverride quaryArea = null;
                 if (Settings.IncludeQuarySpot)
                 {
                     quaryArea = DetermineQuary(r, map, middleArea);
@@ -135,13 +156,18 @@ namespace ImpassableMapMaker
             }
         }
 
-        private static TerrainOverride GenerateMiddleArea(Random r, Map map)
+        private static ITerrainOverride GenerateMiddleArea(Random r, Map map)
         {
             int basePatchX = RandomBasePatch(r, map.Size.x);
             int basePatchZ = RandomBasePatch(r, map.Size.z);
-            int halfXSize = Settings.OpenAreaSizeX / 2;
-            int halfZSize = Settings.OpenAreaSizeZ / 2;
-            return new TerrainOverride(basePatchX - halfXSize, basePatchZ - halfZSize, basePatchX + halfXSize, basePatchZ + halfZSize);
+
+            if (Settings.OpenAreaShape == ImpassableShape.Square)
+            {
+                int halfXSize = Settings.OpenAreaSizeX / 2;
+                int halfZSize = Settings.OpenAreaSizeZ / 2;
+                return new TerrainOverrideSquare(basePatchX - halfXSize, basePatchZ - halfZSize, basePatchX + halfXSize, basePatchZ + halfZSize);
+            }
+            return new TerrainOverrideRound(new IntVec3(basePatchX, 0, basePatchZ), Settings.OpenAreaSizeX);
         }
 
         private static bool IsMountain(IntVec3 i, Map map, int radius)
@@ -198,7 +224,7 @@ namespace ImpassableMapMaker
             return half + delta;
         }
 
-        static TerrainOverride DetermineQuary(Random r, Map map, TerrainOverride middleArea)
+        static ITerrainOverride DetermineQuary(Random r, Map map, ITerrainOverride middleArea)
         {
             int quarterMapX = map.Size.x / 4;
             int quarterMapZ = map.Size.z / 4;
@@ -207,12 +233,12 @@ namespace ImpassableMapMaker
 
             if (middleArea == null)
             {
-                middleArea = new TerrainOverride(quarterMapX * 2, quarterMapZ * 2, quarterMapX * 2, quarterMapZ * 2);
+                middleArea = new TerrainOverrideSquare(quarterMapX * 2, quarterMapZ * 2, quarterMapX * 2, quarterMapZ * 2);
             }
 
             if (r.Next(2) == 0)
             {
-                highX = middleArea.Low.x - 2;
+                highX = middleArea.LowX - 2;
                 lowX = highX - quarterMapX;
                 int x = DetermineRandomPlacement(lowX, highX, quarySize, r);
                 lowX = x - quarySize;
@@ -220,7 +246,7 @@ namespace ImpassableMapMaker
             }
             else
             {
-                lowX = middleArea.High.x + 2;
+                lowX = middleArea.HighX + 2;
                 highX = lowX + quarterMapX;
                 int x = DetermineRandomPlacement(lowX, highX, quarySize, r);
                 lowX = x;
@@ -229,7 +255,7 @@ namespace ImpassableMapMaker
 
             if (r.Next(2) == 0)
             {
-                highZ = middleArea.Low.z - 2;
+                highZ = middleArea.LowZ - 2;
                 lowZ = highZ - quarterMapZ;
                 int z = DetermineRandomPlacement(lowZ, highZ, quarySize, r);
                 lowZ = z - quarySize;
@@ -237,14 +263,14 @@ namespace ImpassableMapMaker
             }
             else
             {
-                lowZ = middleArea.High.z + 2;
+                lowZ = middleArea.HighZ + 2;
                 highZ = lowZ + quarterMapZ;
                 int z = DetermineRandomPlacement(lowZ, highZ, quarySize, r);
                 lowZ = z;
                 highZ = z + quarySize;
             }
 
-            return new TerrainOverride(lowX, lowZ, highX, highZ);
+            return new TerrainOverrideSquare(lowX, lowZ, highX, highZ);
         }
 
         static int DetermineRandomPlacement(int low, int high, int size, Random r)
