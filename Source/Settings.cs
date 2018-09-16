@@ -152,14 +152,14 @@ namespace ImpassableMapMaker
                 if (OpenAreaShape == ImpassableShape.Square)
                 {
                     ls.Label("ImpassableMapMaker.Width".Translate() + ": " + OpenAreaSizeZ);
-                    OpenAreaSizeZ = (int)ls.Slider(OpenAreaSizeZ, 40, 75);
+                    OpenAreaSizeZ = (int)ls.Slider(OpenAreaSizeZ, 15, 75);
                     ls.Label("ImpassableMapMaker.Height".Translate() + ": " + OpenAreaSizeX);
-                    OpenAreaSizeX = (int)ls.Slider(OpenAreaSizeX, 40, 75);
+                    OpenAreaSizeX = (int)ls.Slider(OpenAreaSizeX, 15, 75);
                 }
                 else
                 {
                     ls.Label("ImpassableMapMaker.Radius".Translate() + ": " + OpenAreaSizeZ);
-                    OpenAreaSizeX = (int)ls.Slider(OpenAreaSizeX, 40, 75);
+                    OpenAreaSizeX = (int)ls.Slider(OpenAreaSizeX, 15, 75);
                     OpenAreaSizeZ = OpenAreaSizeX;
                 }
                 if (ls.ButtonText("ImpassableMapMaker.Default".Translate()))
@@ -186,19 +186,16 @@ namespace ImpassableMapMaker
                 }
                 ls.GapLine(GAP_SIZE);
             }
-
-            if (shape == ImpassableShape.Square)
+            
+            ls.Label("ImpassableMapMaker.EdgeBuffer".Translate() + ": " + PeremeterBuffer.ToString());
+            ls.Label("<< " + "ImpassableMapMaker.Smaller".Translate() + " -- " + "ImpassableMapMaker.Larger".Translate() + " >>");
+            PeremeterBuffer = (int)ls.Slider(PeremeterBuffer, 0, 30);
+            if (ls.ButtonText("ImpassableMapMaker.Default".Translate()))
             {
-                ls.Label("ImpassableMapMaker.EdgeBuffer".Translate() + ": " + PeremeterBuffer.ToString());
-                ls.Label("<< " + "ImpassableMapMaker.Smaller".Translate() + " -- " + "ImpassableMapMaker.Larger".Translate() + " >>");
-                PeremeterBuffer = (int)ls.Slider(PeremeterBuffer, 3, 30);
-                if (ls.ButtonText("ImpassableMapMaker.Default".Translate()))
-                {
-                    PeremeterBuffer = DEFAULT_PEREMETER_BUFFER;
-                }
-                ls.Label("ImpassableMapMaker.EdgeBufferWarning".Translate());
-                ls.GapLine(GAP_SIZE);
+                PeremeterBuffer = DEFAULT_PEREMETER_BUFFER;
             }
+            ls.Label("ImpassableMapMaker.EdgeBufferWarning".Translate());
+            ls.GapLine(GAP_SIZE);
 
             ls.CheckboxLabeled("ImpassableMapMaker.IncludeQuarySpot".Translate(), ref IncludeQuarySpot);
             if (IncludeQuarySpot)

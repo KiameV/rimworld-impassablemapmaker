@@ -93,7 +93,7 @@ namespace ImpassableMapMaker
         {
             if (map.TileInfo.hilliness == Hilliness.Impassable)
             {
-                int radius = (int)(((float)map.Size.x + map.Size.z) * 0.25f);
+                int radius = (int)(((float)map.Size.x + map.Size.z) * 0.25f) + 1;
 
                 int middleWallSmoothness = Settings.MiddleWallSmoothness;
                 Random r = new Random((Find.World.info.name + map.Tile).GetHashCode());
@@ -172,13 +172,17 @@ namespace ImpassableMapMaker
 
         private static bool IsMountain(IntVec3 i, Map map, int radius)
         {
+            int buffer = Settings.PeremeterBuffer;
             if (Settings.shape == ImpassableShape.Round)
             {
                 // Round
-                if (i.x <= 4 || i.x >= map.Size.x - 5 ||
-                    i.z <= 4 || i.z >= map.Size.z - 5)
+                if (buffer != 0)
                 {
-                    return false;
+                    if (i.x < buffer || i.x > map.Size.x - buffer - 1 ||
+                        i.z < buffer || i.z > map.Size.z - buffer - 1)
+                    {
+                        return false;
+                    }
                 }
 
                 int x = i.x - (int)(map.Size.x * 0.5f);
@@ -186,11 +190,22 @@ namespace ImpassableMapMaker
                 return Math.Sqrt(Math.Pow(x, 2) + Math.Pow(z, 2)) < radius;
             }
             // Square
+            if ((i.x < 6 && i.z < 6) ||
+                (i.x < 6 && i.z > map.Size.z - 6) ||
+                (i.x > map.Size.x - 6 && i.z < 6) ||
+                (i.x > map.Size.x - 6 && i.z > map.Size.z - 6))
+            {
+                return false;
+            }
+            if (buffer == 0)
+            {
+                return true;
+            }
             return
-                i.x > Settings.PeremeterBuffer &&
-                i.x < map.Size.x - (Settings.PeremeterBuffer + 1) &&
-                i.z > Settings.PeremeterBuffer &&
-                i.z < map.Size.z - (Settings.PeremeterBuffer + 1);
+                i.x > buffer &&
+                i.x < map.Size.x - (buffer + 1) &&
+                i.z > buffer &&
+                i.z < map.Size.z - (buffer + 1);
         }
 
         private static bool IsScatteredRock(IntVec3 i, Random r, Map map, int radius)
