@@ -17,7 +17,7 @@
   <ImpassableMapMaker.OpenAreaSize>中央エリアのサイズ</ImpassableMapMaker.OpenAreaSize>
   <ImpassableMapMaker.Width>横幅</ImpassableMapMaker.Width>
   <ImpassableMapMaker.Height>縦幅</ImpassableMapMaker.Height>
-  <ImpassableMapMaker.Radius>範囲</ImpassableMapMaker.Radius>
+  <ImpassableMapMaker.InnerRadius>範囲</ImpassableMapMaker.InnerRadius>
 
   <ImpassableMapMaker.EdgeBuffer>マップ隅の緩衝地帯</ImpassableMapMaker.EdgeBuffer>
   <ImpassableMapMaker.Smaller>最小</ImpassableMapMaker.Smaller>

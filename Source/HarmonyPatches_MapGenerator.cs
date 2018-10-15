@@ -93,7 +93,7 @@ namespace ImpassableMapMaker
         {
             if (map.TileInfo.hilliness == Hilliness.Impassable)
             {
-                int radius = (int)(((float)map.Size.x + map.Size.z) * 0.25f) + 1;
+                int radius = (int)(((float)map.Size.x + map.Size.z) * 0.25f) + Settings.OuterRadius;
 
                 int middleWallSmoothness = Settings.MiddleWallSmoothness;
                 Random r = new Random((Find.World.info.name + map.Tile).GetHashCode());
@@ -172,8 +172,17 @@ namespace ImpassableMapMaker
 
         private static bool IsMountain(IntVec3 i, Map map, int radius)
         {
+            // Square
+            if ((i.x < 6 && i.z < 6) ||
+                (i.x < 6 && i.z > map.Size.z - 6) ||
+                (i.x > map.Size.x - 6 && i.z < 6) ||
+                (i.x > map.Size.x - 6 && i.z > map.Size.z - 6))
+            {
+                return false;
+            }
+
             int buffer = Settings.PeremeterBuffer;
-            if (Settings.shape == ImpassableShape.Round)
+            if (Settings.OuterShape == ImpassableShape.Round)
             {
                 // Round
                 if (buffer != 0)
@@ -188,14 +197,6 @@ namespace ImpassableMapMaker
                 int x = i.x - (int)(map.Size.x * 0.5f);
                 int z = i.z - (int)(map.Size.z * 0.5f);
                 return Math.Sqrt(Math.Pow(x, 2) + Math.Pow(z, 2)) < radius;
-            }
-            // Square
-            if ((i.x < 6 && i.z < 6) ||
-                (i.x < 6 && i.z > map.Size.z - 6) ||
-                (i.x > map.Size.x - 6 && i.z < 6) ||
-                (i.x > map.Size.x - 6 && i.z > map.Size.z - 6))
-            {
-                return false;
             }
             if (buffer == 0)
             {
@@ -215,7 +216,7 @@ namespace ImpassableMapMaker
                 return false;
             }
 
-            if (Settings.shape == ImpassableShape.Round)
+            if (Settings.OuterShape == ImpassableShape.Round)
             {
                 // Round
                 int x = i.x - (int)(map.Size.x * 0.5f);

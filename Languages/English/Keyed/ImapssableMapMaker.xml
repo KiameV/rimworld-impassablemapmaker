@@ -17,7 +17,8 @@
 	<ImpassableMapMaker.OpenAreaSize>Middle Area Size</ImpassableMapMaker.OpenAreaSize>
 	<ImpassableMapMaker.Width>Width</ImpassableMapMaker.Width>
 	<ImpassableMapMaker.Height>Height</ImpassableMapMaker.Height>
-	<ImpassableMapMaker.Radius>Radius</ImpassableMapMaker.Radius>
+	<ImpassableMapMaker.OuterRadius>Outer Radius</ImpassableMapMaker.OuterRadius>
+	<ImpassableMapMaker.InnerRadius>Open-Area Radius</ImpassableMapMaker.InnerRadius>
 	
 	<ImpassableMapMaker.EdgeBuffer>Edge Buffer</ImpassableMapMaker.EdgeBuffer>
 	<ImpassableMapMaker.Smaller>Smaller</ImpassableMapMaker.Smaller>

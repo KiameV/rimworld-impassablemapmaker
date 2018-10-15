@@ -56,6 +56,7 @@ namespace ImpassableMapMaker
         [HarmonyPatch(typeof(TileFinder), "IsValidTileForNewSettlement")]
         static class Patch_TileFinder_IsValidTileForNewSettlement
         {
+            [HarmonyPriority(Priority.First)]
             static void Postfix(ref bool __result, int tile, StringBuilder reason)
             {
                 if (__result == false)
