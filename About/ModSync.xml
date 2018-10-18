@@ -1,8 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <ModSyncNinjaData>
-  <ID>04197aa5-750d-494f-9a5f-2ea23557fc4b</ID>
   <ModName>Impassable Map Maker</ModName>
-  <Version>0.19.1.1</Version>
+  <Version>1.0.0.1</Version>
   <SaveBreaking>False</SaveBreaking>
   <Host name="Github">
     <Owner>KiameV</Owner>
