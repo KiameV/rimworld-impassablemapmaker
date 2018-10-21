@@ -30,7 +30,7 @@ namespace ImpassableMapMaker
 
     public class Settings : ModSettings
     {
-        private const int GAP_SIZE = 20;
+        private const int GAP_SIZE = 24;
         private const float DEFAULT_PERCENT_OFFSET = 5f;
         private const int DEFAULT_OPEN_AREA_SIZE = 54;
         private const int DEFAULT_WALLS_SMOOTHNESS = 10;
@@ -54,6 +54,7 @@ namespace ImpassableMapMaker
         public static bool IncludeQuarySpot = false;
         public static int OuterRadius = 1;
         public static int QuarySize = DEFAULT_QUARY_SIZE;
+        public static bool TrueRandom = false;
         public static float MovementDifficulty = DEFAULT_MOVEMENT_DIFFICULTY;
         private static string movementDifficultyBuffer = DEFAULT_MOVEMENT_DIFFICULTY.ToString();
 
@@ -77,6 +78,7 @@ namespace ImpassableMapMaker
             Scribe_Values.Look<int>(ref QuarySize, "ImpassableMapMaker.QuarySize", DEFAULT_QUARY_SIZE, false);
             Scribe_Values.Look<float>(ref MovementDifficulty, "ImpassableMapMaker.MovementDifficulty", DEFAULT_MOVEMENT_DIFFICULTY, false);
             Scribe_Values.Look<int>(ref OuterRadius, "ImpassableMapMaker.OuterRadius", DEFAULT_OUTER_RADIUS, false);
+            Scribe_Values.Look<bool>(ref TrueRandom, "ImpassableMapMaker.TrueRandom", false, false);
             movementDifficultyBuffer = MovementDifficulty.ToString();
 
             if (Scribe.mode != LoadSaveMode.Saving)
@@ -103,8 +105,8 @@ namespace ImpassableMapMaker
 
         public static void DoSettingsWindowContents(Rect rect)
         {
-            Rect scroll = new Rect(5f, 45f, 430, rect.height);
-            Rect view = new Rect(0, 45, 400, 800);
+            Rect scroll = new Rect(5f, 45f, 430, rect.height - 40);
+            Rect view = new Rect(0, 45, 400, 1200);
 
             Widgets.BeginScrollView(scroll, ref scrollPosition, view, true);
             Listing_Standard ls = new Listing_Standard();
@@ -146,7 +148,7 @@ namespace ImpassableMapMaker
             ls.GapLine(GAP_SIZE);
 
             ls.CheckboxLabeled("ImpassableMapMaker.HasMiddleArea".Translate(), ref HasMiddleArea);
-            ls.Gap(6);
+            ls.Gap(GAP_SIZE);
 
             if (HasMiddleArea)
             {
@@ -166,14 +168,14 @@ namespace ImpassableMapMaker
                 if (OpenAreaShape == ImpassableShape.Square)
                 {
                     ls.Label("ImpassableMapMaker.Width".Translate() + ": " + OpenAreaSizeZ);
-                    OpenAreaSizeZ = (int)ls.Slider(OpenAreaSizeZ, 15, 75);
+                    OpenAreaSizeZ = (int)ls.Slider(OpenAreaSizeZ, 5, 150);
                     ls.Label("ImpassableMapMaker.Height".Translate() + ": " + OpenAreaSizeX);
-                    OpenAreaSizeX = (int)ls.Slider(OpenAreaSizeX, 15, 75);
+                    OpenAreaSizeX = (int)ls.Slider(OpenAreaSizeX, 5, 150);
                 }
                 else
                 {
                     ls.Label("ImpassableMapMaker.InnerRadius".Translate() + ": " + OpenAreaSizeZ);
-                    OpenAreaSizeX = (int)ls.Slider(OpenAreaSizeX, 15, 75);
+                    OpenAreaSizeX = (int)ls.Slider(OpenAreaSizeX, 5, 100);
                     OpenAreaSizeZ = OpenAreaSizeX;
                 }
                 if (ls.ButtonText("ImpassableMapMaker.Default".Translate()))
@@ -235,7 +237,10 @@ namespace ImpassableMapMaker
                     QuarySize = DEFAULT_QUARY_SIZE;
                 }
             }
-            
+
+            ls.GapLine(GAP_SIZE);
+            ls.CheckboxLabeled("ImpassableMapMaker.TrueRandom".Translate(), ref TrueRandom);
+
             ls.End();
             Widgets.EndScrollView();
         }

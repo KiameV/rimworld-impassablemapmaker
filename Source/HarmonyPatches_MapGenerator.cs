@@ -96,7 +96,11 @@ namespace ImpassableMapMaker
                 int radius = (int)(((float)map.Size.x + map.Size.z) * 0.25f) + Settings.OuterRadius;
 
                 int middleWallSmoothness = Settings.MiddleWallSmoothness;
-                Random r = new Random((Find.World.info.name + map.Tile).GetHashCode());
+                Random r;
+                if (Settings.TrueRandom)
+                    r = new Random(Guid.NewGuid().GetHashCode());
+                else
+                    r = new Random((Find.World.info.name + map.Tile).GetHashCode());
 
                 ITerrainOverride middleArea = null;
                 if (Settings.HasMiddleArea)

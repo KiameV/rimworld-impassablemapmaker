@@ -32,4 +32,6 @@
 	<ImpassableMapMaker.IncludeQuarySpot>Include Quary Spot</ImpassableMapMaker.IncludeQuarySpot>
 	
 	<ImpassableMapMaker.Default>Default</ImpassableMapMaker.Default>
+
+	<ImpassableMapMaker.TrueRandom>True Random</ImpassableMapMaker.TrueRandom>
 </LanguageData>
