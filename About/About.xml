@@ -1,8 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ModMetaData>
-<name>[KV] Impassable Map Maker - 1.0</name>
-<author>Kiame Vivacity</author>
-<url>https://ludeon.com/forums/index.php?topic=31379.0</url>
-<targetVersion>1.0.0</targetVersion>
-<description>Allows settlements on Impassable tiles.</description>
+	<name>[KV] Impassable Map Maker - 1.1</name>
+	<author>Kiame Vivacity</author>
+	<url>https://ludeon.com/forums/index.php?topic=31379.0</url>
+    <supportedVersions>
+        <li>1.0</li>
+        <li>1.1</li>
+    </supportedVersions>
+	<packageId>impassablemapmaker.kv.rw</packageId>
+	<description>Allows settlements on Impassable tiles.</description>
 </ModMetaData>

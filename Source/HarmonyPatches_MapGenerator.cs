@@ -1,4 +1,4 @@
-﻿using Harmony;
+﻿using HarmonyLib;
 using RimWorld;
 using RimWorld.Planet;
 using System;
@@ -12,7 +12,7 @@ namespace ImpassableMapMaker
     {
         static HarmonyPatches()
         {
-            var harmony = HarmonyInstance.Create("com.impassablemapmaker.rimworld.mod");
+            var harmony = new Harmony("com.impassablemapmaker.rimworld.mod");
             harmony.PatchAll(Assembly.GetExecutingAssembly());
 
             Log.Message(
