@@ -213,7 +213,7 @@ namespace ImpassableMapMaker
             
             ls.Label("ImpassableMapMaker.EdgeBuffer".Translate() + ": " + PeremeterBuffer.ToString());
             ls.Label("<< " + "ImpassableMapMaker.Smaller".Translate() + " -- " + "ImpassableMapMaker.Larger".Translate() + " >>");
-            PeremeterBuffer = (int)ls.Slider(PeremeterBuffer, 0, 30);
+            PeremeterBuffer = (int)ls.Slider(PeremeterBuffer, 0, 100);
             if (ls.ButtonText("ImpassableMapMaker.Default".Translate()))
             {
                 PeremeterBuffer = DEFAULT_PEREMETER_BUFFER;
