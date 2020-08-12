@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ModMetaData>
-	<name>[KV] Impassable Map Maker - 1.1</name>
+	<name>[KV] Impassable Map Maker</name>
 	<author>Kiame Vivacity</author>
 	<url>https://ludeon.com/forums/index.php?topic=31379.0</url>
     <supportedVersions>
         <li>1.0</li>
         <li>1.1</li>
+        <li>1.2</li>
     </supportedVersions>
 	<packageId>impassablemapmaker.kv.rw</packageId>
 	<description>Allows settlements on Impassable tiles.</description>
