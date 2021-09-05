@@ -2,6 +2,7 @@
 using RimWorld;
 using RimWorld.Planet;
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using Verse;
 
@@ -15,12 +16,12 @@ namespace ImpassableMapMaker
             var harmony = new Harmony("com.impassablemapmaker.rimworld.mod");
             harmony.PatchAll(Assembly.GetExecutingAssembly());
 
-            Log.Message(
+            /*Log.Message(
                 "ImpassableMapMaker Harmony Patches:" + Environment.NewLine +
                 "  Postfix:" + Environment.NewLine +
                 "    GenStep_ElevationFertility.Generate" + Environment.NewLine +
                 "    WorldPathGrid.CalculatedCostAt" + Environment.NewLine +
-                "    TileFinder.IsValidTileForNewSettlement");
+                "    TileFinder.IsValidTileForNewSettlement");*/
         }
     }
 
@@ -30,6 +31,7 @@ namespace ImpassableMapMaker
         int LowZ { get; }
         int HighX { get; }
         int LowX { get; }
+        IntVec3 Center { get; }
 
         bool IsInside(IntVec3 i, int rand = 0);
     }
@@ -58,10 +60,11 @@ namespace ImpassableMapMaker
             return Math.Pow(x, 2) + Math.Pow(z, 2) < Math.Pow(this.Radius, 2);
         }
 
-        public int LowX { get { return this.Center.x - this.Radius; } }
-        public int HighX { get { return this.Center.x + this.Radius; } }
-        public int LowZ { get { return this.Center.z - this.Radius; } }
-        public int HighZ { get { return this.Center.z + this.Radius; } }
+        public int LowX => this.Center.x - this.Radius;
+        public int HighX => this.Center.x + this.Radius;
+        public int LowZ => this.Center.z - this.Radius;
+        public int HighZ => this.Center.z + this.Radius;
+        IntVec3 ITerrainOverride.Center => this.Center;
     }
 
     internal class TerrainOverrideSquare : ITerrainOverride
@@ -80,15 +83,17 @@ namespace ImpassableMapMaker
                 i.z >= this.Low.z + rand && i.z <= this.High.z + rand);
         }
 
-        public int LowX { get { return this.Low.x; } }
-        public int HighX { get { return this.High.x; } }
-        public int LowZ { get { return this.Low.z; } }
-        public int HighZ { get { return this.High.z; } }
+        public int LowX => this.Low.x;
+        public int HighX => this.High.x;
+        public int LowZ => this.Low.z;
+        public int HighZ => this.High.z;
+        public IntVec3 Center => new IntVec3((int)(this.HighZ - this.LowX * 0.5f) + this.LowX, 0, (int)(this.HighZ - this.LowZ * 0.5f) + this.LowZ);
     }
 
     [HarmonyPatch(typeof(GenStep_ElevationFertility), "Generate")]
     static class Patch_GenStep_Terrain
     {
+        public static ITerrainOverride QuestArea = null;
         static void Postfix(Map map)
         {
             if (map.TileInfo.hilliness == Hilliness.Impassable)
@@ -106,6 +111,13 @@ namespace ImpassableMapMaker
                 if (Settings.HasMiddleArea)
                 {
                     middleArea = GenerateMiddleArea(r, map);
+                }
+
+                QuestArea = null;
+                if (Patch_MapGenerator_Generate.IsQuestMap)
+                {
+                    Log.Message("[Impassable Map Maker] map is for a quest. An open area will be created to support it.");
+                    QuestArea = GenerateAreaForQuests(r, map);
                 }
 
                 ITerrainOverride quaryArea = null;
@@ -136,7 +148,11 @@ namespace ImpassableMapMaker
                         elev = 0.57f;
                     }
 
-                    if (quaryArea != null && quaryArea.IsInside(current))
+                    if (QuestArea?.IsInside(current) == true)
+                    {
+                        elev = 0;
+                    }
+                    else if (quaryArea?.IsInside(current) == true)
                     {
                         // Gravel
                         elev = 0.57f;
@@ -172,6 +188,14 @@ namespace ImpassableMapMaker
                 return new TerrainOverrideSquare(basePatchX - halfXSize, basePatchZ - halfZSize, basePatchX + halfXSize, basePatchZ + halfZSize);
             }
             return new TerrainOverrideRound(new IntVec3(basePatchX, 0, basePatchZ), Settings.OpenAreaSizeX);
+        }
+
+        private static ITerrainOverride GenerateAreaForQuests(Random r, Map map)
+        {
+            int x = DetermineRandomPlacement(30, map.Size.x - 30, 0, r);
+            int z = DetermineRandomPlacement(30, map.Size.z - 30, 0, r);
+
+            return new TerrainOverrideRound(new IntVec3(x, 0, z), 20);
         }
 
         private static bool IsMountain(IntVec3 i, Map map, int radius)
@@ -298,6 +322,89 @@ namespace ImpassableMapMaker
             low += size;
             high -= size;
             return r.Next(high - low) + low;
+        }
+    }
+
+    [HarmonyPatch(typeof(GenStep_ScattererBestFit), "TryFindScatterCell")]
+    static class Patch_GenStep_ScattererBestFit
+    {
+        [HarmonyPriority(Priority.First)]
+        static bool Prefix(GenStep_ScattererBestFit __instance, ref bool __result, Map map, ref IntVec3 result)
+        {
+            if (__instance.def.defName.Contains("Archonexus"))
+            {
+                ITerrainOverride o = Patch_GenStep_Terrain.QuestArea;
+                result = new IntVec3(o.Center.x, o.Center.y, o.Center.z);
+                Stack<Thing> s;
+                for (int x = o.LowX; x <= o.HighX; ++x)
+                {
+                    for (int z = o.LowZ; z <= o.HighZ; ++z)
+                    {
+                        var i = new IntVec3(x, 0, z);
+                        if (o.IsInside(i))
+                        {
+                            s = new Stack<Thing>(map.thingGrid.ThingsAt(i));
+                            while (s.Count > 0)
+                            {
+                                var t = s.Pop();
+                                if (!t.def.destroyable)
+                                    t.DeSpawn();
+                            }
+                        }
+                    }
+                }
+                __result = true;
+                return false;
+            }
+            return true;
+        }
+    }
+
+    [HarmonyPatch(typeof(MapGenerator), "GenerateMap")]
+    public class Patch_MapGenerator_Generate
+    {
+        public static bool IsQuestMap = false;
+
+        [HarmonyPriority(Priority.First)]
+        static void Prefix(MapParent parent, MapGeneratorDef mapGenerator, IEnumerable<GenStepWithParams> extraGenStepDefs)
+        {
+            foreach (var q in Current.Game.questManager.QuestsListForReading)
+            {
+                if (q.State == QuestState.Ongoing)
+                {
+                    foreach (var qt in q.QuestLookTargets)
+                    {
+                        if (qt.Tile == parent.Tile)
+                        {
+                            IsQuestMap = true;
+                            return;
+                        }
+                    }
+                }
+            }
+
+            foreach (var d in mapGenerator.genSteps)
+            {
+                if (d.genStep.def.defName.Contains("Archonexus"))
+                {
+                    IsQuestMap = true;
+                    return;
+                }
+            }
+
+            if (extraGenStepDefs != null)
+            {
+                foreach (var d in extraGenStepDefs)
+                {
+                    if (d.def.defName.Contains("Archonexus"))
+                    {
+                        IsQuestMap = true;
+                        return;
+                    }
+                }
+            }
+            IsQuestMap = false;
+            return;
         }
     }
 }
