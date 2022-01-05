@@ -49,6 +49,7 @@ namespace ImpassableMapMaker
         public static int MiddleWallSmoothness = 10;
         public static int PeremeterBuffer = DEFAULT_PEREMETER_BUFFER;
         public static bool HasMiddleArea = true;
+        public static bool StartInMiddleArea = false;
         public static ImpassableShape OuterShape = ImpassableShape.Square;
         public static bool ScatteredRocks = true;
         public static bool IncludeQuarySpot = false;
@@ -66,6 +67,7 @@ namespace ImpassableMapMaker
             string openAreaShape = OpenAreaShape.ToString();
 
             Scribe_Values.Look<bool>(ref HasMiddleArea, "ImpassableMapMaker.hasMiddleArea", true, false);
+            Scribe_Values.Look<bool>(ref StartInMiddleArea, "ImpassableMapMaker.startInMiddleArea", false, false);
             Scribe_Values.Look<float>(ref percentOffset, "ImpassableMapMaker.percentOffset", DEFAULT_PERCENT_OFFSET, false);
             Scribe_Values.Look<string>(ref openAreaShape, "ImpassableMapMaker.OpenAreaShape", ImpassableShape.Square.ToString(), false);
             Scribe_Values.Look<int>(ref OpenAreaSizeX, "ImpassableMapMaker.OpenAreaSizeX", DEFAULT_OPEN_AREA_SIZE, false);
@@ -152,6 +154,7 @@ namespace ImpassableMapMaker
 
             if (HasMiddleArea)
             {
+                ls.CheckboxLabeled("ImpassableMapMaker.StartInMiddleArea".Translate(), ref StartInMiddleArea);
                 ls.Label("ImpassableMapMaker.MiddleAreaShape".Translate());
                 ls.Gap(2);
                 if (ls.RadioButton("ImpassableMapMaker.ShapeSquare".Translate(), OpenAreaShape == ImpassableShape.Square))

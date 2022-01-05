@@ -12,6 +12,7 @@
 	<ImpassableMapMaker.ScatteredRocks>Scattered Rocks</ImpassableMapMaker.ScatteredRocks>
 	
 	<ImpassableMapMaker.HasMiddleArea>Has Middle Area</ImpassableMapMaker.HasMiddleArea>
+	<ImpassableMapMaker.StartInMiddleArea>Start In Middle Area</ImpassableMapMaker.StartInMiddleArea>
 	<ImpassableMapMaker.MiddleAreaShape>Middle Area Shape</ImpassableMapMaker.MiddleAreaShape>
 	
 	<ImpassableMapMaker.OpenAreaSize>Middle Area Size</ImpassableMapMaker.OpenAreaSize>
@@ -34,4 +35,5 @@
 	<ImpassableMapMaker.Default>Default</ImpassableMapMaker.Default>
 
 	<ImpassableMapMaker.TrueRandom>True Random</ImpassableMapMaker.TrueRandom>
+	
 </LanguageData>

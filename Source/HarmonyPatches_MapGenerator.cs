@@ -93,9 +93,11 @@ namespace ImpassableMapMaker
     [HarmonyPatch(typeof(GenStep_ElevationFertility), "Generate")]
     static class Patch_GenStep_Terrain
     {
+        public static IntVec2? middleAreaCenter = null;
         public static ITerrainOverride QuestArea = null;
         static void Postfix(Map map)
         {
+            middleAreaCenter = null;
             if (map.TileInfo.hilliness == Hilliness.Impassable)
             {
                 int radius = (int)(((float)map.Size.x + map.Size.z) * 0.25f) + Settings.OuterRadius;
@@ -180,6 +182,7 @@ namespace ImpassableMapMaker
         {
             int basePatchX = RandomBasePatch(r, map.Size.x);
             int basePatchZ = RandomBasePatch(r, map.Size.z);
+            middleAreaCenter = new IntVec2(basePatchX, basePatchZ);
 
             if (Settings.OpenAreaShape == ImpassableShape.Square)
             {
@@ -405,6 +408,44 @@ namespace ImpassableMapMaker
             }
             IsQuestMap = false;
             return;
+        }
+    }
+
+    [HarmonyPatch(typeof(GenStep_FindPlayerStartSpot), "Generate")]
+    static class Patch_GenStep_FindPlayerStartSpot_Generate
+    {
+        public static ITerrainOverride QuestArea = null;
+        static void Postfix(Map map)
+        {
+            if (map.TileInfo.hilliness == Hilliness.Impassable &&
+                Patch_GenStep_Terrain.middleAreaCenter != null &&
+                Settings.HasMiddleArea &&
+                Settings.StartInMiddleArea)
+            {
+                float centerX = Patch_GenStep_Terrain.middleAreaCenter.Value.x;
+                float centerZ = Patch_GenStep_Terrain.middleAreaCenter.Value.x;
+                float halfX = Settings.OpenAreaSizeX * 0.5f;
+                float halfZ = Settings.OpenAreaSizeZ * 0.5f;
+                float minX = centerX - halfX;
+                float minZ = centerZ - halfZ;
+                float maxX = centerX + halfX;
+                float maxZ = centerZ + halfZ;
+
+                ;
+                IntVec3 result;
+                if (CellFinderLoose.TryFindRandomNotEdgeCellWith(
+                    (int)Math.Max(0, map.Size.x - centerX - halfX + 1), 
+                    (IntVec3 i) => !i.Roofed(map) && i.x >= minX && i.x <= maxX && i.z >= minZ && i.z <= maxZ, 
+                    map, 
+                    out result))
+                {
+                    MapGenerator.PlayerStartSpot = result;
+                }
+                else
+                {
+                    Log.Error("Unable to start in the middle. Sorry!");
+                }
+            }
         }
     }
 }
