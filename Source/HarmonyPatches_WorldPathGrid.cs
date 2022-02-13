@@ -84,7 +84,8 @@ namespace ImpassableMapMaker
                                 }
                                 else
                                 {
-                                    reason.Append("BaseAlreadyThere".Translate(new object[] { settlement.Faction.Name }));
+                                    var translated = TranslatorFormattedStringExtensions.Translate("BaseAlreadyThere", settlement.Faction.Name);
+                                    reason.Append(translated);
                                 }
                             }
                             __result = false;

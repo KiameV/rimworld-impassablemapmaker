@@ -134,12 +134,15 @@ namespace ImpassableMapMaker
 #endif
                 MapGenFloatGrid fertility = MapGenerator.Fertility;
                 MapGenFloatGrid elevation = MapGenerator.Elevation;
+                IntVec2 roofXMinMax = new IntVec2(Settings.RoofEdgeDepth, map.Size.x - Settings.RoofEdgeDepth);
+                IntVec2 roofZMinMax = new IntVec2(Settings.RoofEdgeDepth, map.Size.z - Settings.RoofEdgeDepth);
                 foreach (IntVec3 current in map.AllCells)
                 {
                     float elev = 0;
                     if (IsMountain(current, map, radius))
                     {
                         elev = 3.40282347E+38f;
+                        map.roofGrid.SetRoof(current, RoofDefOf.RoofRockThick);
                     }
                     else if (Settings.ScatteredRocks && IsScatteredRock(current, r, map, radius))
                     {
@@ -148,16 +151,19 @@ namespace ImpassableMapMaker
                     else
                     {
                         elev = 0.57f;
+                        map.roofGrid.SetRoof(current, null);
                     }
 
                     if (QuestArea?.IsInside(current) == true)
                     {
                         elev = 0;
+                        map.roofGrid.SetRoof(current, null);
                     }
                     else if (quaryArea?.IsInside(current) == true)
                     {
                         // Gravel
                         elev = 0.57f;
+                        map.roofGrid.SetRoof(current, null);
                     }
                     else if (middleArea != null)
                     {
@@ -165,6 +171,7 @@ namespace ImpassableMapMaker
                         if (middleArea.IsInside(current, i))
                         {
                             elev = 0;
+                            map.roofGrid.SetRoof(current, null);
                         }
                     }
 
@@ -174,6 +181,18 @@ namespace ImpassableMapMaker
                         map.fogGrid.Notify_FogBlockerRemoved(current);
                     }*/
                     elevation[current] = elev;
+
+                    if (roofXMinMax.x > 0)
+                    {
+                        if (current.x <= roofXMinMax.x ||
+                            current.x >= roofXMinMax.z ||
+                            current.z <= roofZMinMax.x ||
+                            current.z >= roofZMinMax.z)
+                        {
+                            elevation[current] = 0.75f;
+                            map.roofGrid.SetRoof(current, null);
+                        }
+                    }
                 }
             }
         }
@@ -203,14 +222,19 @@ namespace ImpassableMapMaker
 
         private static bool IsMountain(IntVec3 i, Map map, int radius)
         {
-            // Square
-            if ((i.x < 6 && i.z < 6) ||
-                (i.x < 6 && i.z > map.Size.z - 6) ||
-                (i.x > map.Size.x - 6 && i.z < 6) ||
-                (i.x > map.Size.x - 6 && i.z > map.Size.z - 6))
+            // Fill
+            if (Settings.OuterShape == ImpassableShape.Fill)
             {
-                return false;
+                if (!Settings.HasMiddleArea || !Settings.StartInMiddleArea)
+                {
+                    if (IsWithinCornerOfMap(i, map.Size.x, map.Size.z))
+                        return false;
+                }
+                return true;
             }
+
+            if (IsWithinCornerOfMap(i, map.Size.x, map.Size.z))
+                return false;
 
             int buffer = Settings.PeremeterBuffer;
             if (Settings.OuterShape == ImpassableShape.Round)
@@ -238,6 +262,15 @@ namespace ImpassableMapMaker
                 i.x < map.Size.x - (buffer + 1) &&
                 i.z > buffer &&
                 i.z < map.Size.z - (buffer + 1);
+        }
+
+        private static bool IsWithinCornerOfMap(IntVec3 i, int xMax, int zMax)
+        {
+            const int min = 8;
+            return (i.x < min && i.z < min) ||
+                (i.x < min && i.z > zMax - min) ||
+                (i.x > xMax - min && i.z < min) ||
+                (i.x > xMax - min && i.z > zMax - min);
         }
 
         private static bool IsScatteredRock(IntVec3 i, Random r, Map map, int radius)
@@ -408,6 +441,26 @@ namespace ImpassableMapMaker
             }
             IsQuestMap = false;
             return;
+        }
+
+        [HarmonyPriority(Priority.First)]
+        static void Postfix(ref Map __result)
+        {
+            if (Settings.OuterShape == ImpassableShape.Fill && Settings.RoofEdgeDepth > 0)
+            {
+                int maxX = __result.Size.x - 1;
+                int maxZ = __result.Size.z - 1;
+                foreach (IntVec3 current in __result.AllCells)
+                {
+                    if (current.x == 0 ||
+                        current.x == maxX ||
+                        current.z == 0 ||
+                        current.z == maxZ)
+                    {
+                        __result.roofGrid.SetRoof(current, null);
+                    }
+                }
+            }
         }
     }
 

@@ -25,7 +25,8 @@ namespace ImpassableMapMaker
     public enum ImpassableShape
     {
         Square,
-        Round
+        Round,
+        Fill
     }
 
     public class Settings : ModSettings
@@ -38,6 +39,7 @@ namespace ImpassableMapMaker
         private const int DEFAULT_QUARY_SIZE = 5;
         private const float DEFAULT_MOVEMENT_DIFFICULTY = 4.5f;
         private const int DEFAULT_OUTER_RADIUS = 1;
+        private const int DEFAULT_ROOF_EDGE_DEPTH = 5;
 
         private static Vector2 scrollPosition = Vector2.zero;
 
@@ -54,6 +56,7 @@ namespace ImpassableMapMaker
         public static bool ScatteredRocks = true;
         public static bool IncludeQuarySpot = false;
         public static int OuterRadius = 1;
+        public static int RoofEdgeDepth = 5;
         public static int QuarySize = DEFAULT_QUARY_SIZE;
         public static bool TrueRandom = false;
         public static float MovementDifficulty = DEFAULT_MOVEMENT_DIFFICULTY;
@@ -81,27 +84,22 @@ namespace ImpassableMapMaker
             Scribe_Values.Look<float>(ref MovementDifficulty, "ImpassableMapMaker.MovementDifficulty", DEFAULT_MOVEMENT_DIFFICULTY, false);
             Scribe_Values.Look<int>(ref OuterRadius, "ImpassableMapMaker.OuterRadius", DEFAULT_OUTER_RADIUS, false);
             Scribe_Values.Look<bool>(ref TrueRandom, "ImpassableMapMaker.TrueRandom", false, false);
+            Scribe_Values.Look<int>(ref RoofEdgeDepth, "ImpassableMapMaker.RoofEdgeDepth", DEFAULT_ROOF_EDGE_DEPTH, false);
             movementDifficultyBuffer = MovementDifficulty.ToString();
 
             if (Scribe.mode != LoadSaveMode.Saving)
             {
                 if (ImpassableShape.Round.ToString().Equals(s))
-                {
                     OuterShape = ImpassableShape.Round;
-                }
-                else
-                {
+                else if (ImpassableShape.Square.ToString().Equals(s))
                     OuterShape = ImpassableShape.Square;
-                }
+                else
+                    OuterShape = ImpassableShape.Fill;
 
                 if (ImpassableShape.Round.ToString().Equals(openAreaShape))
-                {
                     OpenAreaShape = ImpassableShape.Round;
-                }
                 else
-                {
                     OpenAreaShape = ImpassableShape.Square;
-                }
             }
         }
 
@@ -114,6 +112,7 @@ namespace ImpassableMapMaker
             Listing_Standard ls = new Listing_Standard();
             ls.Begin(view);
 
+            // World Map Movement Difficulty
             ls.TextFieldNumericLabeled<float>(
                 "ImpassableMapMaker.WorldMapMovementDifficulty".Translate(), 
                 ref MovementDifficulty, ref movementDifficultyBuffer, 1f, 100f);
@@ -124,34 +123,43 @@ namespace ImpassableMapMaker
             }
             ls.GapLine(GAP_SIZE);
 
+            // Mountain Shape
             ls.Label("ImpassableMapMaker.MountainShape".Translate());
             if (ls.RadioButton("ImpassableMapMaker.ShapeSquare".Translate(), OuterShape == ImpassableShape.Square))
-            {
                 OuterShape = ImpassableShape.Square;
-            }
             if (ls.RadioButton("ImpassableMapMaker.ShapeRound".Translate(), OuterShape == ImpassableShape.Round))
-            {
                 OuterShape = ImpassableShape.Round;
-            }
+            if (ls.RadioButton("ImpassableMapMaker.ShapeFill".Translate(), OuterShape == ImpassableShape.Fill))
+                OuterShape = ImpassableShape.Fill;
             ls.Gap(GAP_SIZE);
 
-            if (OuterShape == ImpassableShape.Round)
+            switch (OuterShape)
             {
-                ls.Label("ImpassableMapMaker.OuterRadius".Translate() + ": " + OuterRadius);
-                OuterRadius = (int)ls.Slider(OuterRadius, -100, 100);
-                if (ls.ButtonText("ImpassableMapMaker.Default".Translate()))
-                {
-                    OuterRadius = DEFAULT_OUTER_RADIUS;
-                }
-                ls.Gap(GAP_SIZE);
+                case ImpassableShape.Round:
+                    ls.Label("ImpassableMapMaker.OuterRadius".Translate() + ": " + OuterRadius);
+                    OuterRadius = (int)ls.Slider(OuterRadius, -100, 100);
+                    if (ls.ButtonText("ImpassableMapMaker.Default".Translate()))
+                    {
+                        OuterRadius = DEFAULT_OUTER_RADIUS;
+                    }
+                    ls.Gap(GAP_SIZE);
+                    break;
+                case ImpassableShape.Fill:
+                    ls.Label("ImpassableMapMaker.RooflessEdgeBuffer".Translate() + ": " + RoofEdgeDepth, -1, "ImpassableMapMaker.RooflessEdgeBufferDesc");
+                    RoofEdgeDepth = (int)ls.Slider(RoofEdgeDepth, 0, 20);
+                    if (ls.ButtonText("ImpassableMapMaker.Default".Translate()))
+                    {
+                        RoofEdgeDepth = DEFAULT_ROOF_EDGE_DEPTH;
+                    }
+                    ls.Gap(GAP_SIZE);
+                    break;
             }
 
             ls.CheckboxLabeled("ImpassableMapMaker.ScatteredRocks".Translate(), ref ScatteredRocks);
             ls.GapLine(GAP_SIZE);
 
+            // Middle Area
             ls.CheckboxLabeled("ImpassableMapMaker.HasMiddleArea".Translate(), ref HasMiddleArea);
-            ls.Gap(GAP_SIZE);
-
             if (HasMiddleArea)
             {
                 ls.CheckboxLabeled("ImpassableMapMaker.StartInMiddleArea".Translate(), ref StartInMiddleArea);
@@ -211,18 +219,21 @@ namespace ImpassableMapMaker
                 {
                     MiddleWallSmoothness = 10;
                 }
+            }
+            ls.GapLine(GAP_SIZE);
+
+            if (OuterShape != ImpassableShape.Fill)
+            {
+                ls.Label("ImpassableMapMaker.EdgeBuffer".Translate() + ": " + PeremeterBuffer.ToString());
+                ls.Label("<< " + "ImpassableMapMaker.Smaller".Translate() + " -- " + "ImpassableMapMaker.Larger".Translate() + " >>");
+                PeremeterBuffer = (int)ls.Slider(PeremeterBuffer, 1, 100);
+                if (ls.ButtonText("ImpassableMapMaker.Default".Translate()))
+                {
+                    PeremeterBuffer = DEFAULT_PEREMETER_BUFFER;
+                }
+                ls.Label("ImpassableMapMaker.EdgeBufferWarning".Translate());
                 ls.GapLine(GAP_SIZE);
             }
-            
-            ls.Label("ImpassableMapMaker.EdgeBuffer".Translate() + ": " + PeremeterBuffer.ToString());
-            ls.Label("<< " + "ImpassableMapMaker.Smaller".Translate() + " -- " + "ImpassableMapMaker.Larger".Translate() + " >>");
-            PeremeterBuffer = (int)ls.Slider(PeremeterBuffer, 0, 100);
-            if (ls.ButtonText("ImpassableMapMaker.Default".Translate()))
-            {
-                PeremeterBuffer = DEFAULT_PEREMETER_BUFFER;
-            }
-            ls.Label("ImpassableMapMaker.EdgeBufferWarning".Translate());
-            ls.GapLine(GAP_SIZE);
 
             ls.CheckboxLabeled("ImpassableMapMaker.IncludeQuarySpot".Translate(), ref IncludeQuarySpot);
             if (IncludeQuarySpot)
@@ -242,7 +253,7 @@ namespace ImpassableMapMaker
             }
 
             ls.GapLine(GAP_SIZE);
-            ls.CheckboxLabeled("ImpassableMapMaker.TrueRandom".Translate(), ref TrueRandom);
+            ls.CheckboxLabeled("ImpassableMapMaker.TrueRandom".Translate(), ref TrueRandom, "ImpassableMapMaker.TrueRandomDesc".Translate());
 
             ls.End();
             Widgets.EndScrollView();

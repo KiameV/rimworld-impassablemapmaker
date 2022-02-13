@@ -9,11 +9,14 @@
 	<ImpassableMapMaker.MountainShape>Mountain Shape</ImpassableMapMaker.MountainShape>
 	<ImpassableMapMaker.ShapeSquare>Square</ImpassableMapMaker.ShapeSquare>
 	<ImpassableMapMaker.ShapeRound>Round</ImpassableMapMaker.ShapeRound>
+	<ImpassableMapMaker.ShapeFill>Fill</ImpassableMapMaker.ShapeFill>
 	<ImpassableMapMaker.ScatteredRocks>Scattered Rocks</ImpassableMapMaker.ScatteredRocks>
 	
 	<ImpassableMapMaker.HasMiddleArea>Has Middle Area</ImpassableMapMaker.HasMiddleArea>
 	<ImpassableMapMaker.StartInMiddleArea>Start In Middle Area</ImpassableMapMaker.StartInMiddleArea>
 	<ImpassableMapMaker.MiddleAreaShape>Middle Area Shape</ImpassableMapMaker.MiddleAreaShape>
+	<ImpassableMapMaker.RooflessEdgeBuffer>Roofless Edge Buffer</ImpassableMapMaker.RooflessEdgeBuffer>
+	<ImpassableMapMaker.RooflessEdgeBufferDesc>Distance from the edge that will have no roof. Setting to 0 will prevent anything from spawning from the edge of the map.</ImpassableMapMaker.RooflessEdgeBufferDesc>
 	
 	<ImpassableMapMaker.OpenAreaSize>Middle Area Size</ImpassableMapMaker.OpenAreaSize>
 	<ImpassableMapMaker.Width>Width</ImpassableMapMaker.Width>
@@ -35,5 +38,6 @@
 	<ImpassableMapMaker.Default>Default</ImpassableMapMaker.Default>
 
 	<ImpassableMapMaker.TrueRandom>True Random</ImpassableMapMaker.TrueRandom>
+	<ImpassableMapMaker.TrueRandomDesc>Will always produce a different map even if the tile is selected from the same world</ImpassableMapMaker.TrueRandomDesc>
 	
 </LanguageData>
