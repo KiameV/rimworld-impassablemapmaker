@@ -94,6 +94,7 @@ namespace ImpassableMapMaker
     static class Patch_GenStep_Terrain
     {
         public static IntVec2? middleAreaCenter = null;
+        public static Dictionary<int, HashSet<int>> middleAreaCells = null;
         public static ITerrainOverride QuestArea = null;
         static void Postfix(Map map)
         {
@@ -112,6 +113,11 @@ namespace ImpassableMapMaker
                 ITerrainOverride middleArea = null;
                 if (Settings.HasMiddleArea)
                 {
+                    if (Settings.OuterShape == ImpassableShape.Fill && Settings.CoverRoadAndRiver)
+                    {
+                        ClearMiddleAreaCells();
+                        middleAreaCells = new Dictionary<int, HashSet<int>>();
+                    }
                     middleArea = GenerateMiddleArea(r, map);
                 }
 
@@ -170,6 +176,8 @@ namespace ImpassableMapMaker
                         int i = (middleWallSmoothness == 0) ? 0 : r.Next(middleWallSmoothness);
                         if (middleArea.IsInside(current, i))
                         {
+                            if (middleAreaCells != null)
+                                AddMiddleAreaCell(current);
                             elev = 0;
                             map.roofGrid.SetRoof(current, null);
                         }
@@ -194,6 +202,27 @@ namespace ImpassableMapMaker
                         }
                     }
                 }
+            }
+        }
+
+        private static void AddMiddleAreaCell(IntVec3 c)
+        {
+            if (!middleAreaCells.TryGetValue(c.x, out HashSet<int> z))
+            {
+                z = new HashSet<int>();
+                middleAreaCells[c.x] = z;
+            }
+            z.Add(c.z);
+        }
+
+        public static void ClearMiddleAreaCells()
+        {
+            if (middleAreaCells != null)
+            {
+                foreach (var kv in middleAreaCells)
+                    kv.Value.Clear();
+                middleAreaCells.Clear();
+                middleAreaCells = null;
             }
         }
 
@@ -228,13 +257,17 @@ namespace ImpassableMapMaker
                 if (!Settings.HasMiddleArea || !Settings.StartInMiddleArea)
                 {
                     if (IsWithinCornerOfMap(i, map.Size.x, map.Size.z))
+                    {
                         return false;
+                    }
                 }
                 return true;
             }
 
             if (IsWithinCornerOfMap(i, map.Size.x, map.Size.z))
+            {
                 return false;
+            }
 
             int buffer = Settings.PeremeterBuffer;
             if (Settings.OuterShape == ImpassableShape.Round)
@@ -264,7 +297,7 @@ namespace ImpassableMapMaker
                 i.z < map.Size.z - (buffer + 1);
         }
 
-        private static bool IsWithinCornerOfMap(IntVec3 i, int xMax, int zMax)
+        public static bool IsWithinCornerOfMap(IntVec3 i, int xMax, int zMax)
         {
             const int min = 8;
             return (i.x < min && i.z < min) ||
@@ -444,23 +477,59 @@ namespace ImpassableMapMaker
         }
 
         [HarmonyPriority(Priority.First)]
-        static void Postfix(ref Map __result)
+        static void Postfix(ref Map __result, MapGeneratorDef mapGenerator)
         {
-            if (Settings.OuterShape == ImpassableShape.Fill && Settings.RoofEdgeDepth > 0)
+            if (__result.TileInfo.hilliness == Hilliness.Impassable && Settings.OuterShape == ImpassableShape.Fill)
             {
                 int maxX = __result.Size.x - 1;
                 int maxZ = __result.Size.z - 1;
                 foreach (IntVec3 current in __result.AllCells)
                 {
-                    if (current.x == 0 ||
-                        current.x == maxX ||
-                        current.z == 0 ||
-                        current.z == maxZ)
+                    if (Settings.CoverRoadAndRiver && __result.roofGrid.RoofAt(current) == null)
                     {
-                        __result.roofGrid.SetRoof(current, null);
+                        __result.roofGrid.SetRoof(current, RoofDefOf.RoofRockThick);
+                        if (Patch_GenStep_Terrain.IsWithinCornerOfMap(current, maxX + 1, maxZ + 1))
+                        {
+                            __result.roofGrid.SetRoof(current, null);
+                            continue;
+                        }
+                        if (Patch_GenStep_Terrain.middleAreaCells != null &&
+                            Patch_GenStep_Terrain.middleAreaCells.TryGetValue(current.x, out var zh) && zh.Contains(current.z) == false)
+                        {
+                            __result.roofGrid.SetRoof(current, null);
+                            continue;
+                        }
+                    }
+
+                    if (Settings.RoofEdgeDepth > 0)
+                    {
+                        if (current.x == 0 ||
+                            current.x == maxX ||
+                            current.z == 0 ||
+                            current.z == maxZ)
+                        {
+                            __result.roofGrid.SetRoof(current, null);
+                        }
+                    }
+                    if (Settings.HasMiddleArea == false)
+                    {
+                        for (var x = Math.Max(0, MapGenerator.PlayerStartSpot.x - 5); x < Math.Min(__result.Size.x, MapGenerator.PlayerStartSpot.x + 5); ++x)
+                            for (var z = Math.Max(0, MapGenerator.PlayerStartSpot.z - 5); z < Math.Min(__result.Size.z, MapGenerator.PlayerStartSpot.z + 5); ++z)
+                            {
+                                var i = new IntVec3(x, 0, z);
+                                foreach (var t in __result.thingGrid.ThingsAt(i))
+                                    if (t.def.passability == Traversability.Impassable)
+                                        t.Destroy();
+                                __result.roofGrid.SetRoof(i, null);
+                            }
+                    }
+                    else
+                    {
+                        __result.roofGrid.SetRoof(MapGenerator.PlayerStartSpot, null);
                     }
                 }
             }
+            Patch_GenStep_Terrain.ClearMiddleAreaCells();
         }
     }
 
@@ -485,12 +554,11 @@ namespace ImpassableMapMaker
                 float maxZ = centerZ + halfZ;
 
                 ;
-                IntVec3 result;
                 if (CellFinderLoose.TryFindRandomNotEdgeCellWith(
                     (int)Math.Max(0, map.Size.x - centerX - halfX + 1), 
                     (IntVec3 i) => !i.Roofed(map) && i.x >= minX && i.x <= maxX && i.z >= minZ && i.z <= maxZ, 
                     map, 
-                    out result))
+                    out IntVec3 result))
                 {
                     MapGenerator.PlayerStartSpot = result;
                 }

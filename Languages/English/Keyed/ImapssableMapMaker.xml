@@ -15,8 +15,11 @@
 	<ImpassableMapMaker.HasMiddleArea>Has Middle Area</ImpassableMapMaker.HasMiddleArea>
 	<ImpassableMapMaker.StartInMiddleArea>Start In Middle Area</ImpassableMapMaker.StartInMiddleArea>
 	<ImpassableMapMaker.MiddleAreaShape>Middle Area Shape</ImpassableMapMaker.MiddleAreaShape>
+	
 	<ImpassableMapMaker.RooflessEdgeBuffer>Roofless Edge Buffer</ImpassableMapMaker.RooflessEdgeBuffer>
 	<ImpassableMapMaker.RooflessEdgeBufferDesc>Distance from the edge that will have no roof. Setting to 0 will prevent anything from spawning from the edge of the map.</ImpassableMapMaker.RooflessEdgeBufferDesc>
+	<ImpassableMapMaker.CoverRoadAndRiver>Cover Road and River</ImpassableMapMaker.CoverRoadAndRiver>
+	<ImpassableMapMaker.CoverRoadAndRiverDesc>Will place thick roof over road and river tiles. If there's an open area, that will remain uncovered. If roofless edge buffer is 0 nothing will spawn on the road/river. If roof edge buffer is greater than 0 a part of the road/river will be roofless on the edge of the map.</ImpassableMapMaker.CoverRoadAndRiverDesc>
 	
 	<ImpassableMapMaker.OpenAreaSize>Middle Area Size</ImpassableMapMaker.OpenAreaSize>
 	<ImpassableMapMaker.Width>Width</ImpassableMapMaker.Width>

@@ -57,6 +57,7 @@ namespace ImpassableMapMaker
         public static bool IncludeQuarySpot = false;
         public static int OuterRadius = 1;
         public static int RoofEdgeDepth = 5;
+        public static bool CoverRoadAndRiver = false;
         public static int QuarySize = DEFAULT_QUARY_SIZE;
         public static bool TrueRandom = false;
         public static float MovementDifficulty = DEFAULT_MOVEMENT_DIFFICULTY;
@@ -85,6 +86,7 @@ namespace ImpassableMapMaker
             Scribe_Values.Look<int>(ref OuterRadius, "ImpassableMapMaker.OuterRadius", DEFAULT_OUTER_RADIUS, false);
             Scribe_Values.Look<bool>(ref TrueRandom, "ImpassableMapMaker.TrueRandom", false, false);
             Scribe_Values.Look<int>(ref RoofEdgeDepth, "ImpassableMapMaker.RoofEdgeDepth", DEFAULT_ROOF_EDGE_DEPTH, false);
+            Scribe_Values.Look<bool>(ref CoverRoadAndRiver, "ImpassableMapMaker.CoverRoadAndRiver", false, false);
             movementDifficultyBuffer = MovementDifficulty.ToString();
 
             if (Scribe.mode != LoadSaveMode.Saving)
@@ -145,6 +147,7 @@ namespace ImpassableMapMaker
                     ls.Gap(GAP_SIZE);
                     break;
                 case ImpassableShape.Fill:
+                    ls.CheckboxLabeled("ImpassableMapMaker.CoverRoadAndRiver".Translate(), ref CoverRoadAndRiver, "ImpassableMapMaker.CoverRoadAndRiverDesc".Translate());
                     ls.Label("ImpassableMapMaker.RooflessEdgeBuffer".Translate() + ": " + RoofEdgeDepth, -1, "ImpassableMapMaker.RooflessEdgeBufferDesc");
                     RoofEdgeDepth = (int)ls.Slider(RoofEdgeDepth, 0, 20);
                     if (ls.ButtonText("ImpassableMapMaker.Default".Translate()))
