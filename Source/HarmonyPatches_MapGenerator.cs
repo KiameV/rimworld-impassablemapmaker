@@ -4,6 +4,7 @@ using RimWorld.Planet;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Threading.Tasks;
 using Verse;
 
 namespace ImpassableMapMaker
@@ -94,10 +95,11 @@ namespace ImpassableMapMaker
     static class Patch_GenStep_Terrain
     {
         public static IntVec2? middleAreaCenter = null;
-        public static Dictionary<int, HashSet<int>> middleAreaCells = null;
+        private static HashSet<string> middleAreaCells = null;
         public static ITerrainOverride QuestArea = null;
         static void Postfix(Map map)
         {
+            //Log.Error($"Roof Edge: {Settings.RoofEdgeDepth}");
             middleAreaCenter = null;
             if (map.TileInfo.hilliness == Hilliness.Impassable)
             {
@@ -113,11 +115,6 @@ namespace ImpassableMapMaker
                 ITerrainOverride middleArea = null;
                 if (Settings.HasMiddleArea)
                 {
-                    if (Settings.OuterShape == ImpassableShape.Fill && Settings.CoverRoadAndRiver)
-                    {
-                        ClearMiddleAreaCells();
-                        middleAreaCells = new Dictionary<int, HashSet<int>>();
-                    }
                     middleArea = GenerateMiddleArea(r, map);
                 }
 
@@ -176,8 +173,7 @@ namespace ImpassableMapMaker
                         int i = (middleWallSmoothness == 0) ? 0 : r.Next(middleWallSmoothness);
                         if (middleArea.IsInside(current, i))
                         {
-                            if (middleAreaCells != null)
-                                AddMiddleAreaCell(current);
+                            AddMiddleAreaCell(current);
                             elev = 0;
                             map.roofGrid.SetRoof(current, null);
                         }
@@ -207,23 +203,19 @@ namespace ImpassableMapMaker
 
         private static void AddMiddleAreaCell(IntVec3 c)
         {
-            if (!middleAreaCells.TryGetValue(c.x, out HashSet<int> z))
-            {
-                z = new HashSet<int>();
-                middleAreaCells[c.x] = z;
-            }
-            z.Add(c.z);
+            if (middleAreaCells == null)
+                middleAreaCells = new HashSet<string>();
+            middleAreaCells.Add($"{c.x},{c.z}");
         }
 
         public static void ClearMiddleAreaCells()
         {
-            if (middleAreaCells != null)
-            {
-                foreach (var kv in middleAreaCells)
-                    kv.Value.Clear();
-                middleAreaCells.Clear();
-                middleAreaCells = null;
-            }
+            middleAreaCells?.Clear();
+        }
+
+        public static bool IsInMiddleArea(IntVec3 c)
+        {
+            return middleAreaCells?.Contains($"{c.x},{c.z}") == true;
         }
 
         private static ITerrainOverride GenerateMiddleArea(Random r, Map map)
@@ -254,13 +246,13 @@ namespace ImpassableMapMaker
             // Fill
             if (Settings.OuterShape == ImpassableShape.Fill)
             {
-                if (!Settings.HasMiddleArea || !Settings.StartInMiddleArea)
+                //if (!Settings.HasMiddleArea || !Settings.StartInMiddleArea)
+                //{
+                if (Settings.RoofEdgeDepth > 0 && IsWithinCornerOfMap(i, map.Size.x, map.Size.z))
                 {
-                    if (IsWithinCornerOfMap(i, map.Size.x, map.Size.z))
-                    {
-                        return false;
-                    }
+                    return false;
                 }
+                //}
                 return true;
             }
 
@@ -437,6 +429,7 @@ namespace ImpassableMapMaker
         [HarmonyPriority(Priority.First)]
         static void Prefix(MapParent parent, MapGeneratorDef mapGenerator, IEnumerable<GenStepWithParams> extraGenStepDefs)
         {
+            Patch_GenStep_Terrain.ClearMiddleAreaCells();
             foreach (var q in Current.Game.questManager.QuestsListForReading)
             {
                 if (q.State == QuestState.Ongoing)
@@ -487,18 +480,17 @@ namespace ImpassableMapMaker
                 {
                     if (Settings.CoverRoadAndRiver && __result.roofGrid.RoofAt(current) == null)
                     {
-                        __result.roofGrid.SetRoof(current, RoofDefOf.RoofRockThick);
                         if (Patch_GenStep_Terrain.IsWithinCornerOfMap(current, maxX + 1, maxZ + 1))
                         {
                             __result.roofGrid.SetRoof(current, null);
                             continue;
                         }
-                        if (Patch_GenStep_Terrain.middleAreaCells != null &&
-                            Patch_GenStep_Terrain.middleAreaCells.TryGetValue(current.x, out var zh) && zh.Contains(current.z) == false)
+                        else if (Patch_GenStep_Terrain.IsInMiddleArea(current))
                         {
                             __result.roofGrid.SetRoof(current, null);
                             continue;
                         }
+                        __result.roofGrid.SetRoof(current, RoofDefOf.RoofRockThick);
                     }
 
                     if (Settings.RoofEdgeDepth > 0)
@@ -529,7 +521,22 @@ namespace ImpassableMapMaker
                     }
                 }
             }
+
+            var map = __result;
             Patch_GenStep_Terrain.ClearMiddleAreaCells();
+            Task.Delay(new TimeSpan(0, 0, 3)).ContinueWith(t => {
+                try
+                {
+                    FloodFillerFog.DebugRefogMap(map);
+                }
+                catch { }
+            });
+        }
+
+        [HarmonyFinalizer]
+        static void Finally()
+        {
+            Patch_SettleInEmptyTileUtility_Settle.Finally();
         }
     }
 
@@ -567,6 +574,39 @@ namespace ImpassableMapMaker
                     Log.Error("Unable to start in the middle. Sorry!");
                 }
             }
+        }
+    }
+
+    [HarmonyPatch(typeof(SettleInEmptyTileUtility), "Settle")]
+    static class Patch_SettleInEmptyTileUtility_Settle
+    {
+        public static ImpassableShape OutterShape;
+
+        [HarmonyPriority(Priority.First)]
+        static void Prefix()
+        {
+            OutterShape = Settings.OuterShape;
+            if (OutterShape == ImpassableShape.Fill)
+                Settings.OuterShape = (Rand.Bool) ? ImpassableShape.Round : ImpassableShape.Square;
+        }
+
+        public static void Finally()
+        {
+            Settings.OuterShape = OutterShape;
+        }
+    }
+
+    [HarmonyPatch(typeof(CaravanEnterMapUtility), "Enter")]
+    [HarmonyPatch(new Type[] { typeof(Caravan), typeof(Map), typeof(CaravanEnterMode), typeof(CaravanDropInventoryMode), typeof(bool), typeof(Predicate<IntVec3>)  })]
+    static class Patch_CaravanEnterMapUtility_Enter
+    {
+        [HarmonyPriority(Priority.First)]
+        static void Prefix(Map map, ref CaravanEnterMode enterMode, bool draftColonists)
+        {
+            if (draftColonists)
+                enterMode = CaravanEnterMode.Center;
+            else
+                enterMode = CaravanEnterMode.Edge;
         }
     }
 }

@@ -148,7 +148,7 @@ namespace ImpassableMapMaker
                     break;
                 case ImpassableShape.Fill:
                     ls.CheckboxLabeled("ImpassableMapMaker.CoverRoadAndRiver".Translate(), ref CoverRoadAndRiver, "ImpassableMapMaker.CoverRoadAndRiverDesc".Translate());
-                    ls.Label("ImpassableMapMaker.RooflessEdgeBuffer".Translate() + ": " + RoofEdgeDepth, -1, "ImpassableMapMaker.RooflessEdgeBufferDesc");
+                    ls.Label("ImpassableMapMaker.RooflessEdgeBuffer".Translate() + ": " + RoofEdgeDepth, -1, "ImpassableMapMaker.RooflessEdgeBufferDesc".Translate());
                     RoofEdgeDepth = (int)ls.Slider(RoofEdgeDepth, 0, 20);
                     if (ls.ButtonText("ImpassableMapMaker.Default".Translate()))
                     {
