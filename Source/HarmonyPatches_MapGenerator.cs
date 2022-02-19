@@ -520,17 +520,17 @@ namespace ImpassableMapMaker
                         __result.roofGrid.SetRoof(MapGenerator.PlayerStartSpot, null);
                     }
                 }
+                /*
+                var map = __result;
+                Patch_GenStep_Terrain.ClearMiddleAreaCells();
+                Task.Delay(new TimeSpan(0, 0, 3)).ContinueWith(t => {
+                    try
+                    {
+                        FloodFillerFog.DebugRefogMap(map);
+                    }
+                    catch { }
+                });*/
             }
-
-            var map = __result;
-            Patch_GenStep_Terrain.ClearMiddleAreaCells();
-            Task.Delay(new TimeSpan(0, 0, 3)).ContinueWith(t => {
-                try
-                {
-                    FloodFillerFog.DebugRefogMap(map);
-                }
-                catch { }
-            });
         }
 
         [HarmonyFinalizer]
