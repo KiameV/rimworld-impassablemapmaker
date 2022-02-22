@@ -603,10 +603,13 @@ namespace ImpassableMapMaker
         [HarmonyPriority(Priority.First)]
         static void Prefix(Map map, ref CaravanEnterMode enterMode, bool draftColonists)
         {
-            if (draftColonists)
-                enterMode = CaravanEnterMode.Center;
-            else
-                enterMode = CaravanEnterMode.Edge;
+            if (map.TileInfo.hilliness == Hilliness.Impassable)
+            {
+                if (draftColonists)
+                    enterMode = CaravanEnterMode.Center;
+                else
+                    enterMode = CaravanEnterMode.Edge;
+            }
         }
     }
 }
