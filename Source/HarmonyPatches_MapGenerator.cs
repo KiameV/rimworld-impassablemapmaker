@@ -186,7 +186,7 @@ namespace ImpassableMapMaker
                     }*/
                     elevation[current] = elev;
 
-                    if (roofXMinMax.x > 0)
+                    if (Settings.OuterShape == ImpassableShape.Fill && roofXMinMax.x > 0)
                     {
                         if (current.x <= roofXMinMax.x ||
                             current.x >= roofXMinMax.z ||
