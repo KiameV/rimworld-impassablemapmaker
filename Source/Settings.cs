@@ -26,7 +26,8 @@ namespace ImpassableMapMaker
     {
         Square,
         Round,
-        Fill
+        Fill,
+        NotSet,
     }
 
     public class Settings : ModSettings

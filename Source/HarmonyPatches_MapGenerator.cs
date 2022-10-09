@@ -429,6 +429,8 @@ namespace ImpassableMapMaker
         [HarmonyPriority(Priority.First)]
         static void Prefix(MapParent parent, MapGeneratorDef mapGenerator, IEnumerable<GenStepWithParams> extraGenStepDefs)
         {
+            Patch_SettleInEmptyTileUtility_Settle.Prefix();
+
             Patch_GenStep_Terrain.ClearMiddleAreaCells();
             foreach (var q in Current.Game.questManager.QuestsListForReading)
             {
@@ -580,10 +582,10 @@ namespace ImpassableMapMaker
     [HarmonyPatch(typeof(SettleInEmptyTileUtility), "Settle")]
     static class Patch_SettleInEmptyTileUtility_Settle
     {
-        public static ImpassableShape OutterShape;
+        public static ImpassableShape OutterShape = ImpassableShape.NotSet;
 
         [HarmonyPriority(Priority.First)]
-        static void Prefix()
+        public static void Prefix()
         {
             OutterShape = Settings.OuterShape;
             if (OutterShape == ImpassableShape.Fill)
@@ -592,7 +594,9 @@ namespace ImpassableMapMaker
 
         public static void Finally()
         {
-            Settings.OuterShape = OutterShape;
+            if (OutterShape != ImpassableShape.NotSet)
+                Settings.OuterShape = OutterShape;
+            OutterShape = ImpassableShape.NotSet;
         }
     }
 
