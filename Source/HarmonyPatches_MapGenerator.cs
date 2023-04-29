@@ -474,6 +474,11 @@ namespace ImpassableMapMaker
         [HarmonyPriority(Priority.First)]
         static void Postfix(ref Map __result, MapGeneratorDef mapGenerator)
         {
+            if (__result == null)
+            {
+                Log.Warning("Map is null, impassable map generation will be skipped.");
+                return;
+            }
             if (__result.TileInfo.hilliness == Hilliness.Impassable && Settings.OuterShape == ImpassableShape.Fill)
             {
                 int maxX = __result.Size.x - 1;
